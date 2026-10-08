@@ -1,6 +1,6 @@
 # emoticond
 
-search kaomoji by how you feel (｡•ᴗ-)✧
+a (legitimately) clever kaomoji search engine ฅ^•ﻌ•^ฅ
 
 ```
 $ emoticond search "idk"              ¯\_(ツ)_/¯   ╮(╯_╰)╭   ┐( ˘_˘ )┌ …

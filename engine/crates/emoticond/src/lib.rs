@@ -1,4 +1,4 @@
-//! emoticond: search kaomoji by how you feel.
+//! emoticond: a (legitimately) clever kaomoji search engine.
 //!
 //! The emotion engine (`emo`) over a data file (`data`: format 3, `.kmj`,
 //! docs/format.md), and the public types of the library API (docs/api-frontends.md §1).

@@ -31,7 +31,7 @@ pub const POLICY: i32 = 5;
 pub const CANCELLED: i32 = 130;
 
 const HELP: &str = "\
-emoticond -- find kaomoji by how you feel
+emoticond -- a (legitimately) clever kaomoji search engine
 
 usage:
   emoticond search [QUERY...|-] [OPTIONS] [--format plain|dmenu|tsv|json|jsonl|alfred]

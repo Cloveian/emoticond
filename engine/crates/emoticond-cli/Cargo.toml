@@ -1,6 +1,6 @@
 [package]
 name = "emoticond-cli"
-description = "emoticond: search kaomoji by how you feel, from the command line, a launcher menu or a picker daemon"
+description = "A (legitimately) clever kaomoji search engine: command line, launcher menu and picker daemon"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

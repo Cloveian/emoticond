@@ -10,7 +10,7 @@ homepage.workspace = true
 keywords = ["kaomoji", "emoticon", "search", "emotion", "text"]
 categories = ["text-processing", "data-structures"]
 readme = "../../../README.md"
-description = "Search kaomoji by how you feel"
+description = "A (legitimately) clever kaomoji search engine"
 
 [dependencies]
 memmap2 = { version = "0.9.11", optional = true }

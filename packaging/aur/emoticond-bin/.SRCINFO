@@ -1,5 +1,5 @@
 pkgbase = emoticond-bin
-	pkgdesc = Search kaomoji by how you feel: CLI, launcher menu and picker daemon (release binary)
+	pkgdesc = A (legitimately) clever kaomoji search engine: CLI, launcher menu and picker daemon (release binary)
 	pkgver = 1.0.1
 	pkgrel = 1
 	url = https://github.com/Cloveian/emoticond

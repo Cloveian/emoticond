@@ -2,7 +2,7 @@
 pkgname=emoticond
 pkgver=1.0.1
 pkgrel=1
-pkgdesc='Search kaomoji by how you feel: CLI, launcher menu and picker daemon'
+pkgdesc='A (legitimately) clever kaomoji search engine: CLI, launcher menu and picker daemon'
 arch=('x86_64' 'aarch64')
 url='https://github.com/Cloveian/emoticond'
 license=('MIT OR Apache-2.0')

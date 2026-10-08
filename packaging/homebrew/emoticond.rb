@@ -2,7 +2,7 @@
 # Formula/emoticond.rb): `brew install Cloveian/emoticond/emoticond`.
 # The sha256 values are from the release's SHA256SUMS.
 class Emoticond < Formula
-  desc "Search kaomoji by how you feel"
+  desc "(Legitimately) clever kaomoji search engine"
   homepage "https://github.com/Cloveian/emoticond"
   version "1.0.1"
   license any_of: ["MIT", "Apache-2.0"]
