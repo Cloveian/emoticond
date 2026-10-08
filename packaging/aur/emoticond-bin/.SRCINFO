@@ -17,8 +17,8 @@ pkgbase = emoticond-bin
 	provides = emoticond=1.0.2
 	conflicts = emoticond
 	source_x86_64 = https://github.com/Cloveian/emoticond/releases/download/v1.0.2/emoticond-v1.0.2-x86_64-unknown-linux-gnu.tar.gz
-	sha256sums_x86_64 = SKIP
+	sha256sums_x86_64 = 0c36e08dace5c6201d606cc2cd1b88db10a08c10890c3cb03fff0046c85520ad
 	source_aarch64 = https://github.com/Cloveian/emoticond/releases/download/v1.0.2/emoticond-v1.0.2-aarch64-unknown-linux-gnu.tar.gz
-	sha256sums_aarch64 = SKIP
+	sha256sums_aarch64 = 30b8c93fa3f66addc0f60a4b0695d401ed8f6e0878fff6a5bcd20df387611d8d
 
 pkgname = emoticond-bin

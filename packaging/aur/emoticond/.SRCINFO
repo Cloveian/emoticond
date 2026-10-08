@@ -18,6 +18,6 @@ pkgbase = emoticond
 	conflicts = emoticond-bin
 	options = !lto
 	source = emoticond-1.0.2.tar.gz::https://github.com/Cloveian/emoticond/archive/v1.0.2.tar.gz
-	sha256sums = SKIP
+	sha256sums = e4d3074e46a2915e53f8447a73323e898580d1781560dd2609e7795e0867a9fb
 
 pkgname = emoticond

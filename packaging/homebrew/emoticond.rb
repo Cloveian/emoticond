@@ -1,6 +1,6 @@
 # Homebrew formula for a tap (github.com/Cloveian/homebrew-emoticond, as
 # Formula/emoticond.rb): `brew install Cloveian/emoticond/emoticond`.
-# Fill in the sha256 values from the release's SHA256SUMS.
+# The sha256 values are from the release's SHA256SUMS.
 class Emoticond < Formula
   desc "(Legitimately) clever kaomoji search engine"
   homepage "https://github.com/Cloveian/emoticond"
@@ -10,18 +10,18 @@ class Emoticond < Formula
   on_macos do
     on_arm do
       url "https://github.com/Cloveian/emoticond/releases/download/v#{version}/emoticond-v#{version}-aarch64-apple-darwin.tar.gz"
-      sha256 "FILL_IN"
+      sha256 "23ec2662d74fbebe1b24f15c2b962b40f11ea2a3e072a903ec8789935521fc0e"
     end
   end
 
   on_linux do
     on_intel do
       url "https://github.com/Cloveian/emoticond/releases/download/v#{version}/emoticond-v#{version}-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "FILL_IN"
+      sha256 "0c36e08dace5c6201d606cc2cd1b88db10a08c10890c3cb03fff0046c85520ad"
     end
     on_arm do
       url "https://github.com/Cloveian/emoticond/releases/download/v#{version}/emoticond-v#{version}-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "FILL_IN"
+      sha256 "30b8c93fa3f66addc0f60a4b0695d401ed8f6e0878fff6a5bcd20df387611d8d"
     end
   end
 

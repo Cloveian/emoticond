@@ -18,8 +18,8 @@ install=emoticond.install
 conflicts=("$_pkgname")
 source_x86_64=("$url/releases/download/v$pkgver/$_pkgname-v$pkgver-x86_64-unknown-linux-gnu.tar.gz")
 source_aarch64=("$url/releases/download/v$pkgver/$_pkgname-v$pkgver-aarch64-unknown-linux-gnu.tar.gz")
-sha256sums_x86_64=('SKIP') # updpkgsums once the v1.0.2 release exists
-sha256sums_aarch64=('SKIP')
+sha256sums_x86_64=('0c36e08dace5c6201d606cc2cd1b88db10a08c10890c3cb03fff0046c85520ad')
+sha256sums_aarch64=('30b8c93fa3f66addc0f60a4b0695d401ed8f6e0878fff6a5bcd20df387611d8d')
 
 package() {
   cd "$_pkgname-v$pkgver-$CARCH-unknown-linux-gnu"
