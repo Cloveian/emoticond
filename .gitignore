@@ -1,0 +1,3 @@
+engine/target/
+*.kmj
+!engine/crates/emoticond/tests/fixtures/*.kmj

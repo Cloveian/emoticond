@@ -1,0 +1,12 @@
+{
+  "lang": "en",
+  "intensifiers": ["really", "very", "so", "super", "extremely", "incredibly", "insanely", "absolutely", "totally", "hella", "mega", "ultra", "crazy", "seriously", "damn", "fucking", "deeply", "utter", "utterly", "completely", "truly", "beyond", "af", "asf", "quite"],
+  "diminishers": ["kinda", "sorta", "slightly", "bit", "somewhat", "mildly", "vaguely", "barely", "faintly", "little"],
+  "diminisher_phrases": ["kind of", "sort of", "a bit", "a little"],
+  "negators": ["not", "no", "isnt", "isn't", "aint", "ain't", "never"],
+  "stopwords": ["a", "an", "the", "i", "im", "i'm", "ill", "i'll", "id", "i'd", "it", "its", "it's", "is", "am", "are", "was", "be", "to", "of", "or", "and", "for", "my", "me", "you", "your", "we", "with", "on", "in", "at", "this", "that", "just", "anything", "something", "when", "what", "feel", "feeling", "face", "kaomoji", "emoticon", "thats", "that's", "theres", "there's"],
+  "lewd": ["suggestive", "lewd", "nsfw", "horny"],
+  "single": ["face", "solo", "single"],
+  "pair": ["pair", "couple", "together", "two", "duo", "both"],
+  "emoticons": [":/ unsure", ":\\ unsure", ":-/ unsure", ":( sad", ":-( sad", "): sad", ":'( crying", ":'-( crying", ";_; crying", "T_T crying", "T.T crying", "T-T crying", "TT_TT crying", "QQ crying", ":) happy", ":-) happy", "(: happy", "^^ happy", "^_^ happy", "^-^ happy", "^.^ happy", "n_n happy", ":] happy", ":D laughing", ":-D laughing", "xD laughing", "XD laughing", "xd laughing", ":'D crying laughing", "x) laughing", ":P tongue out", ":-P tongue out", ":p tongue out", ";P tongue out", ":b tongue out", "xP tongue out", ";) wink", ";-) wink", ";] wink", ":3 cat", ":3c cat", "x3 cat", "<3 love", "</3 heartbroken", ":* kiss", ":-* kiss", ":o surprised", ":-o surprised", ":O shocked", ":-O shocked", "o_o shocked", "O_O shocked", "o.o shocked", "O.O shocked", "0_0 shocked", "o_O confused", "O_o confused", "D: horrified", "D-: horrified", ":| meh", ":-| meh", "-_- annoyed", "-.- annoyed", "-__- annoyed", "=_= bored", "u_u sulk", ">:( angry", ">:-( angry", ">:| angry", ">_< frustrated", ">.< frustrated", ">_<; frustrated", ":@ angry", ">:) evil grin", ">:D evil grin", "}:) evil grin", "B) deal with it", "8) deal with it", ":$ embarrassed", ":s unsure", ":S unsure", ":/) unsure", ":x shy", ":X shy", ":-x shy", "._. awkward", "-_-; awkward", "^^; awkward", "^_^; awkward", "¬_¬ side eye", "¬.¬ side eye", "o/ wave", "\\o wave", "\\o/ yay", "o7 salute", "<(^_^)> hug", "zzz sleepy", "zZz sleepy"]
+}

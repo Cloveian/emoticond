@@ -1,0 +1,18 @@
+kaomoji data licence
+
+The project's own data in this data set -- emotion and attribute scores,
+quality ratings, tags written by the project's labelling agents and models,
+search phrases, situations, canonical picks, boosts and grammar word lists --
+is licensed under the Creative Commons Attribution 4.0 International licence
+(CC BY 4.0): https://creativecommons.org/licenses/by/4.0/
+
+You may share and adapt it for any purpose, including commercially, as long
+as you give appropriate credit ("kaomoji data, CC BY 4.0"), link to the
+licence, and indicate if changes were made.
+
+The face strings themselves were collected from the sources listed in the
+attribution notice (ATTR); their notices and terms are given there. Tags
+that came verbatim from a source are kept only where that source allows it.
+
+This text is a summary; the licence's legal code at the address above is
+what applies.

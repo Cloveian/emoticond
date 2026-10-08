@@ -1,0 +1,61 @@
+{"term":"shrug","id":"2026da3e4989","boost":3,"why":"the standard shrug"}
+{"term":"shrug","id":"aacce2f7dc3b","boost":2,"why":"classic japanese shrug arms"}
+{"term":"shrug","id":"39263b9d8a49","boost":2,"why":"clean deadpan shrug"}
+{"term":"shrug","id":"c76d7d608e8d","boost":1,"why":"compact variant of canonical shrug"}
+{"term":"shrug","id":"666b52ef5721","boost":1,"why":"tidy shrug with raised arms"}
+{"term":"bear","id":"32ebf9c4b6ca","boost":3,"why":"the standard bear face"}
+{"term":"bear","id":"699872a31a94","boost":2,"why":"classic happy bear"}
+{"term":"bear","id":"e68e02eec73a","boost":1,"why":"excited bear, clear variety"}
+{"term":"bear","id":"2abf3633eb24","boost":1,"why":"hugging bear, widely used"}
+{"term":"cat","id":"7c922d813eaf","boost":3,"why":"the standard cat with paws"}
+{"term":"cat","id":"5c0fd2148ccb","boost":2,"why":"classic whiskered cat face"}
+{"term":"cat","id":"79b37fa21872","boost":2,"why":"plain readable cat face"}
+{"term":"cat","id":"b05048353c4b","boost":1,"why":"simple old-school cat"}
+{"term":"cat","id":"aa33f032a447","boost":1,"why":"round-eyed cat, distinct look"}
+{"term":"table flip","id":"db25438fe06d","boost":3,"why":"the canonical table flip"}
+{"term":"table flip","id":"10e86ea2c5f7","boost":2,"why":"rage-face flip, very common"}
+{"term":"table flip","id":"4abc74e9ed3c","boost":2,"why":"shouting flip variant"}
+{"term":"table flip","id":"c1ffc5fbb5eb","boost":1,"why":"putting the table back"}
+{"term":"lenny","id":"a4c73fc69055","boost":3,"why":"the lenny face itself"}
+{"term":"lenny","id":"9323f6608023","boost":2,"why":"lenny reaching out"}
+{"term":"lenny","id":"34dd42452150","boost":2,"why":"star-eyed lenny variant"}
+{"term":"lenny","id":"a9b85c48b3a3","boost":1,"why":"donger cousin of lenny"}
+{"term":"lenny","id":"1450ebaea3b0","boost":1,"why":"plain smirk, lenny-adjacent"}
+{"term":"happy","id":"733004b048a8","boost":3,"why":"the standard smiling face"}
+{"term":"happy","id":"a454fcad374f","boost":2,"why":"classic delighted face"}
+{"term":"happy","id":"b9252142c00c","boost":2,"why":"common cheerful face"}
+{"term":"happy","id":"b6082d62b6b3","boost":1,"why":"minimal ascii smile"}
+{"term":"happy","id":"74cbbe0b00fb","boost":1,"why":"soft closed-eye grin"}
+{"term":"sad","id":"6adf48fd8eba","boost":3,"why":"unmistakably crying face"}
+{"term":"sad","id":"0e6f30b1f7ee","boost":2,"why":"classic tearful face"}
+{"term":"sad","id":"dbca68712269","boost":2,"why":"well-known weeping eyes"}
+{"term":"sad","id":"e64be2dd7c39","boost":1,"why":"downcast frowning face"}
+{"term":"sad","id":"e9a689cb7fd1","boost":1,"why":"classic dejected face"}
+{"term":"angry","id":"f77e3d9088eb","boost":3,"why":"the standard angry glare"}
+{"term":"angry","id":"1241221cd82e","boost":2,"why":"classic shouting angry face"}
+{"term":"angry","id":"37c7667329ee","boost":2,"why":"furious face with anger mark"}
+{"term":"angry","id":"7c79b9fffd4c","boost":1,"why":"sharp scowling brows"}
+{"term":"angry","id":"e209dd0e7258","boost":1,"why":"annoyed pouting glare"}
+{"term":"cute","id":"a86bf0860ff5","boost":3,"why":"the classic cute flower face"}
+{"term":"cute","id":"23b37c8081fd","boost":2,"why":"happy cute face with flower"}
+{"term":"cute","id":"a2c2987e0acb","boost":2,"why":"common cute smiling face"}
+{"term":"cute","id":"7c922d813eaf","boost":1,"why":"cute cat with paws"}
+{"term":"cute","id":"32ebf9c4b6ca","boost":1,"why":"cute standard bear"}
+{"term":"sleepy","id":"ab0890e2c8da","boost":3,"why":"the standard sleeping face"}
+{"term":"sleepy","id":"c361eb6c6d49","boost":2,"why":"dozing face with zzz"}
+{"term":"sleepy","id":"003a508f4e07","boost":2,"why":"classic lying-in-bed kaomoji"}
+{"term":"sleepy","id":"5a8e7a04f887","boost":1,"why":"drowsy face with sleep symbol"}
+{"term":"hug","id":"8dffee195e99","boost":3,"why":"the standard hug arms"}
+{"term":"hug","id":"2abf3633eb24","boost":2,"why":"classic bear hug"}
+{"term":"hug","id":"a9facf2f5003","boost":2,"why":"eager squeezing hug"}
+{"term":"hug","id":"56d86d2010f4","boost":1,"why":"loving hug with hearts"}
+{"term":"hug","id":"d164e66a1a3e","boost":1,"why":"hug facing the other way"}
+{"term":"disapproval","id":"29820037c508","boost":3,"why":"the look of disapproval"}
+{"term":"disapproval","id":"72ef4ff0caa6","boost":2,"why":"classic side-eye face"}
+{"term":"disapproval","id":"1e5037c9fd21","boost":2,"why":"clear unimpressed stare"}
+{"term":"disapproval","id":"61d00540b8a7","boost":1,"why":"judgmental monocle look"}
+{"term":"disapproval","id":"b2a9f4be4584","boost":1,"why":"minimal skeptical eyes"}
+{"term": "blush", "id": "5a4277f84651", "boost": 2, "why": "the author's pick at rank 30 (query review 2026-10-07)"}
+{"term": "giggle", "id": "fa575597af0b", "boost": 1, "why": "the author's pick at rank 7: cat giggle (query review 2026-10-07)"}
+{"term": "tsundere", "id": "446a07a45a33", "boost": 1, "why": "the author's pick at rank 21 (query review 2026-10-07)"}
+{"term": "silly", "id": "fd9761492c9f", "boost": 1, "why": "marked good at rank 19 (query review 2026-10-07)"}

@@ -1,0 +1,24 @@
+kaomoji data: sources and notices
+
+Faces (strings) were collected from these sources. Scores, tags, phrases and
+picks were produced by this project unless a source is named for them.
+
+- kmoji: faces; tags (redistribution of tags allowed).
+- kaomojiru: faces; tags (redistribution of tags allowed).
+- gsozai: faces. Its tags feed derived data only; the category tree is not
+  mirrored.
+- fontvibe kaomoji dataset: faces and tags, CC BY 4.0 with an MIT notice;
+  its "kaosute" pool is excluded from redistributed builds.
+- emojidb: faces; per-query copy counts used only as a derived popularity
+  prior (the lists themselves are not published).
+- emojicombos: faces; single-word user tags.
+- kaomojikuma: faces; headings used for vectors only.
+- Japanese IME dictionaries: faces; readings used in reduced form only,
+  never a whole dictionary.
+- kaomojisjp: face strings (CC0); no labels or ordering from it are used.
+- ekohrt/emoticon_kaomoji_dataset: faces; its tags are not shipped.
+
+This build's licence policy is recorded in the manifest (MANI `policy`):
+a `private` build may contain tags from sources marked "limited" above and
+must not be redistributed; public builds are filtered by the public policy
+(docs/public-data.md).

@@ -1,0 +1,23 @@
+[package]
+name = "emoticond-state"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+# std::fs::File::lock (advisory file locks) is stable since 1.89.
+rust-version = "1.89"
+description = "The files a kaomoji front-end writes: local popularity, the report queue, blocklists, machine overlays, dev logs"
+
+[dependencies]
+emoticond = { path = "../emoticond" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2.0.21"
+ureq = { version = "3", optional = true, default-features = false, features = ["rustls", "json"] }
+
+[features]
+default = []
+# Network senders. Building without it means no network code exists in this
+# crate, which is the packager's compile-time kill switch for report sending
+#. The HTTP sender posts to the collector
+# (docs/collector.md).
+net = ["dep:ureq"]

@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = ["crates/emoticond", "crates/emoticond-cli", "crates/emoticond-state", "crates/emoticond-config", "crates/emoticond-compile", "crates/emoticond-collector"]
+
+[workspace.package]
+version = "1.0.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

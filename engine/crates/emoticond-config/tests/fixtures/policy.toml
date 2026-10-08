@@ -1,0 +1,19 @@
+# /etc/emoticond/policy.toml -- read by every front-end via the config crate,
+# and handed to the library as OpenOptions.policy.
+policy_version = 1
+
+[ceilings]
+safety.min     = "strict"     # users may not choose moderate/off
+popularity.max = "local"      # no shared counts from this machine
+
+[locks]
+safety.allow_opt_in = false   # "nsfw" in a query unlocks nothing
+feedback.send       = false   # kill switch: reports are queued locally, never sent
+styles.crude        = "hide"
+
+[endpoints]
+# feedback.endpoint = "https://feedback.example.org/emoticond"   # org collector instead
+
+[data]
+blocklist = ["/etc/emoticond/blocklist.txt"]
+dataset   = "core"

@@ -1,0 +1,54 @@
+# ~/.config/emoticond/config.toml -- a fuller sample than docs/options.md §7.4:
+# a local data dir, a dev pick log and a per-front-end profile.
+config_version = 1
+
+[search]
+limit           = 50
+safety          = "moderate"          # demote suggestive faces instead of hiding them
+pinned          = true
+dedupe          = "normal"
+variety         = 0.0
+lang            = "auto"
+
+[search.styles]
+lenny = "demote"
+crude = "demote"
+long  = "demote"
+
+[popularity]
+mode           = "local"
+half_life_days = 60
+remember_terms = true
+weight         = "normal"
+
+[feedback]
+send          = true
+apply_locally = true
+
+[ui]
+show_reading = true       # explain = "reading"
+max_results  = 100
+start_timeout_ms = 5000
+
+[daemon]
+idle_exit = 120           # seconds; 0 = never
+
+[data]
+dataset = "full"
+dirs    = ["~/src/emoticond/data-dev"]   # a local data dir first
+
+[dev]
+pick_log   = "~/src/emoticond/picks.jsonl"
+
+[profile.cli.search]
+complete_partial = false
+explain = "off"
+
+[profile.quickshell.search]
+limit = 100
+
+[profile.quickshell.ui]
+max_results = 100
+
+[advanced.tuning]         # unstable; needs a build with the unstable-tuning feature
+# weights = { emotion = 0.5, dense = 1.2, engine = 1.2, lexical = 0.2 }

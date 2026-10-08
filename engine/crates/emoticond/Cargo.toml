@@ -1,0 +1,26 @@
+[package]
+name = "emoticond"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Search kaomoji by how you feel"
+
+[dependencies]
+memmap2 = { version = "0.9.11", optional = true }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", optional = true }
+sha1_smol = "1.0.1"
+thiserror = "2.0.21"
+
+[dev-dependencies]
+serde_json = "1"
+
+[features]
+default = ["fs", "mmap"]
+# Database::open from paths (without it: Database::from_bytes only), and
+# overlay files (JSONL; without it: overlays built in code only).
+fs = ["dep:serde_json"]
+# Memory-map data files (else they are read into memory).
+mmap = ["fs", "dep:memmap2"]
+# SearchOptions.tuning (docs/options.md §3.4). Unstable; off in release front-ends.
+unstable-tuning = []
