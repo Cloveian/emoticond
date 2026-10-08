@@ -36,6 +36,7 @@ pub mod import;
 pub mod overlay;
 pub mod paths;
 pub mod shared;
+pub mod stats;
 pub mod usage;
 pub mod watch;
 
@@ -55,6 +56,9 @@ pub use import::{import_picks, normalize_query, ImportSummary};
 pub use overlay::{demote, read_boosts, undemote, BoostRow, DEMOTE_BOOST};
 pub use paths::StatePaths;
 pub use shared::{Changes, Shared};
+#[cfg(feature = "net")]
+pub use stats::HttpStatsSender;
+pub use stats::{StatsSender, StatsUpload, STATS_VERSION};
 pub use usage::{Bucket, OutboxBatch, OutboxCount, UsageSettings, UsageStore};
 pub use watch::Watched;
 

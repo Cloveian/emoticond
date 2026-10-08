@@ -46,8 +46,8 @@ pub mod schema;
 pub mod value;
 mod walk;
 
-pub use config::{Config, DEFAULT_REPORT_ENDPOINT, DaemonSettings, DataSettings, DevSettings, FeedbackSettings, PopularitySettings, UiSettings};
-pub use consent::{Consent, ReportsChoice};
+pub use config::{Config, DEFAULT_REPORT_ENDPOINT, DEFAULT_STATS_ENDPOINT, DaemonSettings, DataSettings, DevSettings, FeedbackSettings, PopularitySettings, UiSettings};
+pub use consent::{Choice, Consent, Consents, Topic};
 pub use env::Env;
 pub use load::{ConfigChoice, DescribedSetting, Description, Loader, RequestOptions, Resolved, Source};
 pub use paths::{Paths, Platform};

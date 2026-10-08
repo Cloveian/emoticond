@@ -406,6 +406,7 @@ fn env_layer(env: &Env, paths: &Paths, warnings: &mut Vec<Warning>) -> EnvOut {
     for (var, key) in [
         ("EMOTICOND_PICK_LOG", "dev.pick_log"),
         ("EMOTICOND_REPORT_ENDPOINT", "feedback.endpoint"),
+        ("EMOTICOND_STATS_ENDPOINT", "popularity.share_endpoint"),
         ("EMOTICOND_IDLE_EXIT", "daemon.idle_exit"),
         ("EMOTICOND_TUNING_WEIGHTS", "advanced.tuning.weights"),
     ] {
@@ -616,9 +617,15 @@ impl Resolved {
         o
     }
 
-    /// The effective popularity mode (after the policy ceiling).
+    /// The effective popularity mode (after the policy ceiling): `Shared`
+    /// when the user said yes to usage stats ([`stats_choice`](Self::stats_choice))
+    /// and the policy allows it.
     pub fn popularity_mode(&self) -> PopularityMode {
-        self.config.popularity.mode
+        let m = self.config.popularity.mode;
+        if m == PopularityMode::Local && self.stats_choice().send() && self.stats_allowed() {
+            return PopularityMode::Shared;
+        }
+        m
     }
 
     /// True when the user and the policy both allow sending reports.
@@ -627,17 +634,40 @@ impl Resolved {
         self.reports_choice().send() && !self.policy.reports_disabled
     }
 
-    /// Where sending stands, before the policy: `feedback.send` when a file,
-    /// the environment or a flag set it, else the saved answer
-    /// (`consent.json`), else unasked.
-    pub fn reports_choice(&self) -> crate::ReportsChoice {
-        if !matches!(self.source("feedback.send"), None | Some(Source::Default)) {
-            return crate::ReportsChoice::Set(self.config.feedback.send);
+    /// Reports: `feedback.send` when a file, the environment or a flag set
+    /// it, else the saved answer (`consent.json`), else on.
+    pub fn reports_choice(&self) -> crate::consent::Choice {
+        use crate::consent::Choice;
+        if self.set_by_user("feedback.send") {
+            return Choice::Set(self.config.feedback.send);
         }
-        match crate::consent::read(&self.paths.consent_file()) {
-            Some(c) => crate::ReportsChoice::Answered(c),
-            None => crate::ReportsChoice::Unasked,
+        match crate::consent::read(&self.paths.consent_file()).reports {
+            Some(c) => Choice::Answered(c),
+            None => Choice::Default(true),
         }
+    }
+
+    /// Usage stats: `popularity.mode` when a file, the environment or a
+    /// flag set it (`shared` is yes), else the saved answer, else unasked
+    /// (nothing is sent until the user says yes).
+    pub fn stats_choice(&self) -> crate::consent::Choice {
+        use crate::consent::Choice;
+        if self.set_by_user("popularity.mode") {
+            return Choice::Set(self.config.popularity.mode == PopularityMode::Shared);
+        }
+        match crate::consent::read(&self.paths.consent_file()).stats {
+            Some(c) => Choice::Answered(c),
+            None => Choice::Unasked,
+        }
+    }
+
+    /// The policy's popularity ceiling allows `shared`.
+    pub fn stats_allowed(&self) -> bool {
+        self.policy.popularity(PopularityMode::Shared) == PopularityMode::Shared
+    }
+
+    fn set_by_user(&self, key: &str) -> bool {
+        !matches!(self.source(key), None | Some(Source::Default))
     }
 
     /// Where the effective value of `key` came from.

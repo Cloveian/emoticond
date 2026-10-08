@@ -6,6 +6,7 @@
 //! later queued search on the same channel replaces is answered at once with
 //! `superseded`, and `cancel` drops a queued request.
 
+use emoticond_config::Topic;
 use super::app::{load_config, now_ms, random_id, App, ConfigArgs};
 use super::app::{Sending, Submitted};
 use super::out::{json, EntryOut, ErrorOut, Fields, Obj, SearchOut};
@@ -224,22 +225,36 @@ const SETTLE_MS: u64 = 120_000;
 /// kind of failure is logged once.
 #[cfg(feature = "net")]
 fn start_sender(app: &App) {
-    let Some((queue, endpoint, cfg)) = app.sender_parts() else { return };
+    let parts = app.sender_parts();
     std::thread::spawn(move || {
-        let mut sender = emoticond_state::HttpSender::new(Some(endpoint));
+        let super::app::SenderParts { queue, reports_endpoint, stats_endpoint, cfg, usage: (usage_path, outbox, settings) } = parts;
+        let mut reports = reports_endpoint.map(|e| emoticond_state::HttpSender::new(Some(e)));
+        let mut stats = stats_endpoint.map(|e| emoticond_state::HttpStatsSender { endpoint: Some(e) });
         let mut last_error = String::new();
+        let mut log_once = |what: &str, e: String| {
+            let e = format!("{what}: {e}");
+            if e != last_error {
+                eprintln!("emoticond: {e}");
+                last_error = e;
+            }
+        };
         loop {
-            // re-checked every round: the user may answer or change their mind
-            let (policy, since) = super::app::send_now(&cfg);
-            if policy.allows() {
-                match queue.flush_settled(&mut sender, policy, now_ms(), SETTLE_MS, since) {
-                    Ok(_) => last_error.clear(),
-                    Err(e) => {
-                        let e = e.to_string();
-                        if e != last_error {
-                            eprintln!("emoticond: reports not sent yet: {e}");
-                            last_error = e;
-                        }
+            // re-checked every round: the user may change their answers
+            if let Some(sender) = reports.as_mut() {
+                let (policy, since) = super::app::send_now(&cfg);
+                if policy.allows() {
+                    if let Err(e) = queue.flush_settled(sender, policy, now_ms(), SETTLE_MS, since) {
+                        log_once("reports not sent yet", e.to_string());
+                    }
+                }
+            }
+            if let Some(sender) = stats.as_mut() {
+                let mut s = settings.clone();
+                s.mode = cfg.popularity_mode();
+                if s.mode == emoticond::PopularityMode::Shared {
+                    let mut store = emoticond_state::UsageStore::open(usage_path.clone(), outbox.clone(), s);
+                    if let Err(e) = store.send_stats(sender, now_ms()) {
+                        log_once("usage stats not sent yet", e.to_string());
                     }
                 }
             }
@@ -265,6 +280,7 @@ fn ready_line(app: &App, emo: Option<&Database>, ms: u128) -> String {
         .put("disclaimer", json!({"version": DISCLAIMER_VERSION, "short": sending.footer(), "text": DISCLAIMER}))
         .put("sending", sending.on)
         .put_if(sending.off_by.is_some(), "sending_off_by", sending.off_by)
+        .put("stats", app.stats())
         .put("popularity", app.popularity().as_str())
         .put("profile", &app.cfg.profile)
         .put("warnings", app.warnings())
@@ -678,20 +694,32 @@ impl Server {
         }
     }
 
-    /// `{"op":"consent","send":true|false}`: the user's answer to "send
-    /// reports?", asked in the front-end's UI while the ready line says
-    /// `"sending_off_by":"unasked"`. Replies with the new sending state.
+    /// `{"op":"consent","stats":true|false}` (the answer to the usage-stats
+    /// question, asked in the front-end's UI while the ready line says
+    /// `"stats":"unasked"`) and/or `"reports":true|false` (a settings
+    /// switch). Replies with both states.
     fn consent(&mut self, v: &Value, id: Option<&Value>) -> String {
-        let Some(send) = v.get("send").and_then(Value::as_bool) else {
-            return err_line(id, "bad_request", Some("send".into()), "\"send\" must be true or false");
-        };
-        if let Err(e) = self.app.set_consent(send) {
-            return err_line(id, "not_allowed", Some("send".into()), e);
+        let mut any = false;
+        for (field, topic) in [("stats", Topic::Stats), ("reports", Topic::Reports)] {
+            match v.get(field) {
+                None | Some(Value::Null) => continue,
+                Some(Value::Bool(b)) => {
+                    any = true;
+                    if let Err(e) = self.app.set_consent(topic, *b) {
+                        return err_line(id, "not_allowed", Some(field.into()), e);
+                    }
+                }
+                Some(_) => return err_line(id, "bad_request", Some(field.into()), format!("\"{field}\" must be true or false")),
+            }
+        }
+        if !any {
+            return err_line(id, "bad_request", None, "give \"stats\" and/or \"reports\" as true or false");
         }
         let sending = self.app.sending();
         Obj::new()
             .put("id", id)
             .put("ok", true)
+            .put("stats", self.app.stats())
             .put("sending", sending.on)
             .put_if(sending.off_by.is_some(), "sending_off_by", sending.off_by)
             .put("footer", sending.footer())

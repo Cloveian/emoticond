@@ -66,7 +66,7 @@ emoticond browse                          # starter faces, then your recent pick
 emoticond similar "(╥﹏╥)"                 # faces like this one
 emoticond menu                            # pick with fuzzel/rofi/walker/wofi/tofi/bemenu/dmenu
 emoticond config show                     # every setting and where it came from
-emoticond reports on                      # send the reports you make (asked once otherwise)
+emoticond stats on                        # share anonymous usage stats (asked once otherwise)
 ```
 
 - `emoticond menu` is made for a keybind (hyprland:
@@ -143,13 +143,15 @@ kept in `~/.local/state/emoticond/`, shared by every front-end
 - **popularity:** faces you pick move up. stays on your computer
 - **reports** (from the picker's menus) apply right away on your machine:
   offensive faces disappear, bad fits drop
-- **sending them is opt-in:** you're asked once ("send reports? [y/n]", no
-  default), and nothing leaves your computer until you say yes. a sent
-  report has the query, how it was read and the top 20 faces, and nothing
-  else (docs/collector.md)
-  - only reports made after you say yes; undo within 2 minutes and it never
-    gets sent
-  - change your mind any time: `emoticond reports on|off`
+- **reports are sent in** (that's what reporting is) with the query, how
+  it was read and the top 20 faces, and nothing else
+  - undo within 2 minutes and it never gets sent
+  - `emoticond reports off` keeps them on your computer
+- **usage stats are opt-in:** you're asked once ("share usage stats? [y/n]",
+  no default). say yes and, once a day, a picker sends which faces got
+  picked for which built-in search words (counts rounded into ranges, never
+  what you typed), no id. nothing is shared until you say yes;
+  `emoticond stats on|off` changes it (docs/collector.md)
 - **blocking:** `emoticond block FACE` / `unblock FACE`
 - **overlays:** your own picks, phrases and boosts in `~/.config/emoticond/overlays/`
 

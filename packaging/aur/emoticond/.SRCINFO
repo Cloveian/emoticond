@@ -1,6 +1,6 @@
 pkgbase = emoticond
 	pkgdesc = A (legitimately) clever kaomoji search engine: CLI, launcher menu and picker daemon
-	pkgver = 1.0.1
+	pkgver = 1.0.2
 	pkgrel = 1
 	url = https://github.com/Cloveian/emoticond
 	install = emoticond.install
@@ -17,7 +17,7 @@ pkgbase = emoticond
 	optdepends = fuzzel: a launcher for emoticond menu (or rofi, wofi, tofi, bemenu, walker, dmenu)
 	conflicts = emoticond-bin
 	options = !lto
-	source = emoticond-1.0.1.tar.gz::https://github.com/Cloveian/emoticond/archive/v1.0.1.tar.gz
-	sha256sums = 102a7d69dccff0738a4e2f719374aff50ca590797364d3d3ddb23a9405561e80
+	source = emoticond-1.0.2.tar.gz::https://github.com/Cloveian/emoticond/archive/v1.0.2.tar.gz
+	sha256sums = SKIP
 
 pkgname = emoticond

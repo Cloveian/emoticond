@@ -28,7 +28,8 @@ pub struct PopularitySettings {
     pub weight: UsageWeight,
     /// How often `shared` batches are queued (default 7 days).
     pub share_interval_days: u16,
-    /// Where shared counts go. None until the service exists.
+    /// Where usage stats go ([`DEFAULT_STATS_ENDPOINT`]); an empty value
+    /// means nowhere.
     pub share_endpoint: Option<String>,
 }
 
@@ -42,13 +43,16 @@ impl Default for PopularitySettings {
             remember_terms: true,
             weight: UsageWeight::Normal,
             share_interval_days: 7,
-            share_endpoint: None,
+            share_endpoint: Some(DEFAULT_STATS_ENDPOINT.to_string()),
         }
     }
 }
 
 /// Where reports go by default: the project's collector (docs/collector.md).
 pub const DEFAULT_REPORT_ENDPOINT: &str = "https://emoticond.mewo.gay/v1/reports";
+
+/// Where usage stats go when the user said yes (docs/collector.md).
+pub const DEFAULT_STATS_ENDPOINT: &str = "https://emoticond.mewo.gay/v1/stats";
 
 /// Feedback and report settings (options.md §5.2). The state crate's
 /// `FeedbackQueue` takes these as arguments.
@@ -58,9 +62,9 @@ pub struct FeedbackSettings {
     /// Show the report menus at all.
     pub menus: bool,
     /// The user's own switch, when set in a config file, the environment or
-    /// a flag; otherwise the saved answer to "send reports?" decides
-    /// (`consent`, `Resolved::reports_choice`), and with no answer nothing
-    /// is sent. The policy can always turn it off.
+    /// a flag; otherwise their saved answer (`emoticond reports on|off`,
+    /// `Resolved::reports_choice`), else on. The policy can always turn it
+    /// off.
     pub send: bool,
     /// Report collector ([`DEFAULT_REPORT_ENDPOINT`]); policy may set it,
     /// and an empty value means nowhere.
@@ -82,7 +86,7 @@ impl Default for FeedbackSettings {
     fn default() -> Self {
         FeedbackSettings {
             menus: true,
-            send: false,
+            send: true,
             endpoint: Some(DEFAULT_REPORT_ENDPOINT.to_string()),
             queue: None,
             queue_max: 500,

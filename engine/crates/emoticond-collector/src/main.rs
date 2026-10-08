@@ -2,10 +2,17 @@
 //! (docs/collector.md) and keeps them in SQLite.
 //!
 //!     POST /v1/reports   {"reports":[Report, ...]}  ->  {"accepted":[report_id, ...],"rejected":[{"index","error"}]}
+//!     POST /v1/stats     StatsUpload (emoticond-state)  ->  {"ok":true}
 //!     GET  /healthz      ->  ok
 //!
 //!     emoticond-collector                 serve ($EMOTICOND_COLLECTOR_ADDR, default 0.0.0.0:8080)
 //!     emoticond-collector dump [--since UNIX_MS]   every stored report as JSONL, oldest first
+//!     emoticond-collector stats           active installs per day, week and month, and the top faces
+//!
+//! Usage stats come only from users who said yes. An upload has no id: the
+//! collector counts uploads per day, and the client's "first this week /
+//! month" flags give weekly and monthly counts. Each upload and each batch
+//! in it is stored once (by its random token), so a retry counts once.
 //!
 //! The database is $EMOTICOND_COLLECTOR_DB (default /data/reports.db). A
 //! report is accepted when it parses as the library's `Report` and passes
@@ -18,7 +25,7 @@
 use emoticond::report::{NOTE_MAX_CHARS, REPORT_VERSION, SHOWN_MAX};
 use emoticond::Report;
 use rusqlite::{params, Connection};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::Read;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -55,7 +62,30 @@ fn open_db(path: &str) -> rusqlite::Result<Connection> {
              json        TEXT NOT NULL
          );
          CREATE INDEX IF NOT EXISTS reports_received ON reports (received_ms);
-         CREATE INDEX IF NOT EXISTS reports_key ON reports (key);",
+         CREATE INDEX IF NOT EXISTS reports_key ON reports (key);
+         CREATE TABLE IF NOT EXISTS stats_uploads (
+             token       TEXT PRIMARY KEY,
+             received_ms INTEGER NOT NULL,
+             day         TEXT NOT NULL,
+             first_week  INTEGER NOT NULL,
+             first_month INTEGER NOT NULL,
+             engine      TEXT NOT NULL,
+             data        TEXT NOT NULL
+         );
+         CREATE INDEX IF NOT EXISTS stats_uploads_day ON stats_uploads (day);
+         CREATE TABLE IF NOT EXISTS stats_batches (
+             token     TEXT PRIMARY KEY,
+             upload    TEXT NOT NULL,
+             period_from INTEGER NOT NULL,
+             period_to   INTEGER NOT NULL
+         );
+         CREATE TABLE IF NOT EXISTS stats_counts (
+             batch  TEXT NOT NULL,
+             term   TEXT,
+             face   TEXT NOT NULL,
+             bucket TEXT NOT NULL
+         );
+         CREATE INDEX IF NOT EXISTS stats_counts_face ON stats_counts (face);",
     )?;
     Ok(db)
 }
@@ -151,6 +181,136 @@ fn accept(db: &Connection, body: &str) -> Result<Answer, String> {
     Ok(answer)
 }
 
+/// A usage-stats upload (emoticond-state's `StatsUpload`).
+#[derive(Deserialize)]
+struct StatsUpload {
+    v: u16,
+    token: String,
+    engine: String,
+    data: String,
+    day: String,
+    first_this_week: bool,
+    first_this_month: bool,
+    batches: Vec<StatsBatch>,
+}
+
+#[derive(Deserialize)]
+struct StatsBatch {
+    token: String,
+    from: u64,
+    to: u64,
+    counts: Vec<StatsCount>,
+}
+
+#[derive(Deserialize)]
+struct StatsCount {
+    term: Option<String>,
+    id: emoticond::FaceId,
+    bucket: String,
+}
+
+/// Most batches in one upload, and counts in one batch.
+const MAX_STATS_BATCHES: usize = 60;
+const MAX_STATS_COUNTS: usize = 10_000;
+
+fn token_ok(t: &str) -> bool {
+    (16..=64).contains(&t.len()) && t.bytes().all(|b| b.is_ascii_hexdigit())
+}
+
+fn day_ok(d: &str) -> bool {
+    let b = d.as_bytes();
+    b.len() == 10 && b[4] == b'-' && b[7] == b'-' && b.iter().enumerate().all(|(i, c)| i == 4 || i == 7 || c.is_ascii_digit())
+}
+
+/// Store one upload; a repeated token is a retry and stores nothing new.
+fn accept_stats(db: &Connection, body: &str) -> Result<(), String> {
+    let u: StatsUpload = serde_json::from_str(body).map_err(|e| format!("not a stats upload: {e}"))?;
+    if u.v != 1 {
+        return Err(format!("unsupported version {}", u.v));
+    }
+    if !token_ok(&u.token) || !day_ok(&u.day) || u.engine.chars().count() > 32 || u.data.chars().count() > 32 {
+        return Err("bad token, day or version field".into());
+    }
+    if u.batches.len() > MAX_STATS_BATCHES {
+        return Err(format!("more than {MAX_STATS_BATCHES} batches"));
+    }
+    for b in &u.batches {
+        if !token_ok(&b.token) || b.counts.len() > MAX_STATS_COUNTS || b.from > b.to {
+            return Err("bad batch".into());
+        }
+        for c in &b.counts {
+            if !matches!(c.bucket.as_str(), "1" | "2-4" | "5-19" | "20+") || c.term.as_ref().is_some_and(|t| t.chars().count() > 64) {
+                return Err("bad count".into());
+            }
+        }
+    }
+    let tx = db.unchecked_transaction().map_err(|e| e.to_string())?;
+    let new = tx
+        .execute(
+            "INSERT OR IGNORE INTO stats_uploads (token, received_ms, day, first_week, first_month, engine, data) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            params![u.token, now_ms() as i64, u.day, u.first_this_week, u.first_this_month, u.engine, u.data],
+        )
+        .map_err(|e| e.to_string())?;
+    if new > 0 {
+        for b in &u.batches {
+            let fresh = tx
+                .execute(
+                    "INSERT OR IGNORE INTO stats_batches (token, upload, period_from, period_to) VALUES (?1, ?2, ?3, ?4)",
+                    params![b.token, u.token, b.from as i64, b.to as i64],
+                )
+                .map_err(|e| e.to_string())?;
+            if fresh == 0 {
+                continue;
+            }
+            for c in &b.counts {
+                tx.execute(
+                    "INSERT INTO stats_counts (batch, term, face, bucket) VALUES (?1, ?2, ?3, ?4)",
+                    params![b.token, c.term, c.id.to_string(), c.bucket],
+                )
+                .map_err(|e| e.to_string())?;
+            }
+        }
+    }
+    tx.commit().map_err(|e| e.to_string())
+}
+
+/// `emoticond-collector stats`: active installs (that said yes) per day,
+/// week and month, and the most picked faces.
+fn print_stats(db: &Connection) -> rusqlite::Result<()> {
+    let table = |title: &str, sql: &str| -> rusqlite::Result<()> {
+        println!("{title}");
+        let mut st = db.prepare(sql)?;
+        let rows = st.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?)))?;
+        for row in rows {
+            let (k, n) = row?;
+            println!("  {k}  {n}");
+        }
+        Ok(())
+    };
+    table("installs per day (last 14)", "SELECT day, count(*) FROM stats_uploads GROUP BY day ORDER BY day DESC LIMIT 14")?;
+    table(
+        "installs per week (last 8)",
+        "SELECT strftime('%Y-W%W', day), sum(first_week) FROM stats_uploads GROUP BY 1 ORDER BY 1 DESC LIMIT 8",
+    )?;
+    table("installs per month (last 6)", "SELECT substr(day, 1, 7), sum(first_month) FROM stats_uploads GROUP BY 1 ORDER BY 1 DESC LIMIT 6")?;
+    table(
+        "most picked faces (picks, roughly)",
+        "SELECT face, sum(CASE bucket WHEN '1' THEN 1 WHEN '2-4' THEN 3 WHEN '5-19' THEN 10 ELSE 25 END) AS n FROM stats_counts GROUP BY face ORDER BY n DESC LIMIT 20",
+    )?;
+    Ok(())
+}
+
+fn read_body(req: &mut Request) -> Result<String, Response<std::io::Cursor<Vec<u8>>>> {
+    let mut body = Vec::new();
+    let read = req.as_reader().take(MAX_BODY as u64 + 1).read_to_end(&mut body);
+    match (read, body.len() > MAX_BODY, String::from_utf8(body)) {
+        (Err(e), _, _) => Err(error(400, &format!("reading the body: {e}"))),
+        (_, true, _) => Err(error(413, "request too large")),
+        (_, _, Err(_)) => Err(error(400, "body is not UTF-8")),
+        (Ok(_), false, Ok(body)) => Ok(body),
+    }
+}
+
 /// Requests and reports per client in the current window.
 struct Limits {
     window_start: Instant,
@@ -207,17 +367,27 @@ fn handle(db: &Connection, limits: &mut Limits, mut req: Request) {
             if !limits.request(&who) {
                 error(429, "too many reports from here; try again later")
             } else {
-                let mut body = Vec::new();
-                let read = req.as_reader().take(MAX_BODY as u64 + 1).read_to_end(&mut body);
-                match (read, body.len() > MAX_BODY, String::from_utf8(body)) {
-                    (Err(e), _, _) => error(400, &format!("reading the body: {e}")),
-                    (_, true, _) => error(413, "request too large"),
-                    (_, _, Err(_)) => error(400, "body is not UTF-8"),
-                    (Ok(_), false, Ok(body)) => match accept(db, &body) {
+                match read_body(&mut req) {
+                    Err(r) => r,
+                    Ok(body) => match accept(db, &body) {
                         Ok(a) => {
                             limits.reports(&who, a.accepted.len());
                             json_response(200, serde_json::to_string(&a).unwrap_or_default())
                         }
+                        Err(e) => error(400, &e),
+                    },
+                }
+            }
+        }
+        (Method::Post, "/v1/stats") => {
+            let who = client(&req);
+            if !limits.request(&who) {
+                error(429, "too many requests from here; try again later")
+            } else {
+                match read_body(&mut req) {
+                    Err(r) => r,
+                    Ok(body) => match accept_stats(db, &body) {
+                        Ok(()) => json_response(200, "{\"ok\":true}".into()),
                         Err(e) => error(400, &e),
                     },
                 }
@@ -262,7 +432,13 @@ fn main() {
                 std::process::exit(1);
             }
         }
-        Some("-h" | "--help") => println!("usage: emoticond-collector [dump [--since UNIX_MS]]"),
+        Some("stats") => {
+            if let Err(e) = print_stats(&db) {
+                eprintln!("emoticond-collector: {e}");
+                std::process::exit(1);
+            }
+        }
+        Some("-h" | "--help") => println!("usage: emoticond-collector [dump [--since UNIX_MS] | stats]"),
         Some(other) => {
             eprintln!("emoticond-collector: unknown command {other:?}");
             std::process::exit(2);
@@ -311,6 +487,31 @@ mod tests {
         assert!(accept(&db, "[]").is_err());
         let many = serde_json::json!({"reports": vec![serde_json::Value::Null; MAX_BATCH + 1]}).to_string();
         assert!(accept(&db, &many).is_err());
+    }
+
+    #[test]
+    fn stats_uploads_count_once() {
+        let db = open_db(":memory:").unwrap();
+        let up = |token: &str, batch: &str| {
+            serde_json::json!({
+                "v": 1, "token": token, "engine": "1.0.2", "data": "1.0", "day": "2026-10-08",
+                "first_this_week": true, "first_this_month": false,
+                "batches": [{"v": 1, "token": batch, "from": 1, "to": 2, "engine": "1.0.2", "data": "1.0",
+                             "counts": [{"term": "sad", "id": "k6ef56ed18cc6", "bucket": "2-4"}, {"term": null, "id": "k6ef56ed18cc6", "bucket": "1"}]}]
+            })
+            .to_string()
+        };
+        let a = "0123456789abcdef0123456789abcdef";
+        let b = "fedcba9876543210fedcba9876543210";
+        accept_stats(&db, &up(a, b)).unwrap();
+        accept_stats(&db, &up(a, b)).unwrap(); // a retry
+        let count = |sql: &str| -> i64 { db.query_row(sql, [], |r| r.get(0)).unwrap() };
+        assert_eq!(count("SELECT count(*) FROM stats_uploads"), 1);
+        assert_eq!(count("SELECT count(*) FROM stats_counts"), 2);
+        assert_eq!(count("SELECT sum(first_week) FROM stats_uploads"), 1);
+        assert!(accept_stats(&db, &up("nothex!", b)).is_err());
+        assert!(accept_stats(&db, &up(a, b).replace("2-4", "lots")).is_err());
+        print_stats(&db).unwrap();
     }
 
     #[test]

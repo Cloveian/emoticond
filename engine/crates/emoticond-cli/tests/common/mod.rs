@@ -74,7 +74,8 @@ impl Sandbox {
             .env("EMOTICOND_REPO", &self.repo)
             .env("EMOTICOND_PICK_LOG", self.picks())
             // never send the tests' reports anywhere
-            .env("EMOTICOND_REPORT_ENDPOINT", "none");
+            .env("EMOTICOND_REPORT_ENDPOINT", "none")
+            .env("EMOTICOND_STATS_ENDPOINT", "none");
         c
     }
 

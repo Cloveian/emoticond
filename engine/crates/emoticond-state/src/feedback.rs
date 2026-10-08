@@ -27,26 +27,24 @@ use std::path::{Path, PathBuf};
 /// The version of [`DISCLAIMER`]. Reports record the version shown
 /// (`ReportBuilder::stamp`); raise it whenever what a report contains
 /// changes, so front-ends show the full text again (options.md §5.4).
-pub const DISCLAIMER_VERSION: u32 = 2;
+pub const DISCLAIMER_VERSION: u32 = 3;
 
 /// The full disclaimer, shown the first time a report menu opens and again
 /// whenever [`DISCLAIMER_VERSION`] goes up.
 pub const DISCLAIMER: &str = "Reporting helps improve emoticond search. When you click a report item, \
-a report is saved on this computer and, if you chose to send reports, sent to the emoticond project. \
+a report is saved on this computer and sent to the emoticond project. \
 A report contains: the text you searched for, how the search was read (the reading line), \
 the menu item you chose, the face you reported and its place in the list, the top 20 faces shown, \
 any note you write, your safety and style settings, the library and data versions, the time, \
 and a random report id. It does not contain your usage history, other searches, an install id, \
 your locale, time zone or computer name. Reporting a face as offensive also hides it on this \
-computer at once, whether or not the report is sent. Nothing is sent until you say yes to sending \
-reports, only reports made after that are sent, you can change your answer any time \
-(`emoticond reports on|off`), and your system administrator may have turned sending off.";
+computer at once, whether or not the report is sent. Sending can be turned off \
+(`emoticond reports off`), and your system administrator may have turned it off.";
 
 /// The one-line footer for a report menu.
 pub fn disclaimer_footer(send: SendPolicy) -> &'static str {
     match send {
         SendPolicy::Allowed => "Reports are sent with your search, its reading and the top 20 faces shown.",
-        SendPolicy::Off(SendOff::Unasked) => "Reports are saved on this computer until you choose whether to send them.",
         SendPolicy::Off(_) => "Reports are saved on this computer only.",
     }
 }
@@ -54,10 +52,8 @@ pub fn disclaimer_footer(send: SendPolicy) -> &'static str {
 /// Why sending is off.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SendOff {
-    /// The user's `feedback.send = false`, or their answer "no".
+    /// The user's `feedback.send = false` or `emoticond reports off`.
     User,
-    /// The user hasn't been asked yet: nothing is sent until they say yes.
-    Unasked,
     /// The packager's policy (`Policy::reports_disabled`).
     Policy,
     /// Built without the `net` feature: no network code exists.
@@ -68,7 +64,6 @@ impl std::fmt::Display for SendOff {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
             SendOff::User => "turned off in settings",
-            SendOff::Unasked => "not chosen yet (emoticond reports on)",
             SendOff::Policy => "turned off by your system administrator",
             SendOff::NotBuilt => "this build has no network support",
         })

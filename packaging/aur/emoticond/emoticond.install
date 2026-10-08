@@ -1,9 +1,10 @@
 post_install() {
   cat <<'MSG'
-==> emoticond: reports you make from picker menus can be sent to improve the
-    data. nothing is sent unless you say yes: you're asked the first time you
-    run `emoticond` in a terminal, or decide now with
-      emoticond reports on    # or off
+==> emoticond: anonymous usage stats (which faces get picked, no id) are only
+    shared if you say yes: you're asked the first time you run `emoticond`
+    in a terminal, or decide now with
+      emoticond stats on    # or off
+    reports you make from picker menus are sent (emoticond reports off to stop)
 ==> data: install emoticond-data, or run `emoticond data fetch`
 MSG
 }

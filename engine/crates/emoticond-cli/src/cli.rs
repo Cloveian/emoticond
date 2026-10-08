@@ -10,6 +10,7 @@
 //! Exit codes (§2.5): 0 ok, 1 no results, 2 usage error, 3 no data,
 //! 4 state/IO error or a missing tool, 5 refused by policy, 130 cancelled.
 
+use emoticond_config::Topic;
 use super::app::{load_config, now_ms, random_id, App, ConfigArgs};
 use super::out::{json, EntryOut, Fields, HitOut, SearchOut};
 use emoticond::{Database, Entry, FaceId, Pick, Reason, Report, ReportBuilder, SearchOptions, SearchResult, Target, TermSource, Warning};
@@ -46,7 +47,8 @@ usage:
   emoticond menu [--launcher L] [--action copy|type|print] [OPTIONS]
   emoticond serve [--idle SECS] [--frontend NAME]      (stdio protocol, docs/protocol.md)
   emoticond config [show]        emoticond info [--json]
-  emoticond reports [on|off]     (send the reports you make? shows the choice without on/off)
+  emoticond reports [on|off]     (send the reports you make; on by default)
+  emoticond stats [on|off]       (share anonymous usage stats; asked once)
   emoticond data fetch [X.Y] [--set core|full|lite]   (download data into ~/.local/share/emoticond)
 
 report reasons:
@@ -246,7 +248,7 @@ pub fn main(args: &[String]) -> i32 {
             OK
         }
         "search" | "explain" | "get" | "similar" | "complete" | "browse" | "pick" | "report" | "block" | "unblock" | "serve" | "menu"
-        | "config" | "info" | "data" | "reports" => {
+        | "config" | "info" | "data" | "reports" | "stats" => {
             let a = match parse(cmd, &args[2..]) {
                 Ok(a) => a,
                 Err(e) => {
@@ -341,32 +343,31 @@ pub fn resolve(db: &Database, s: &str) -> Option<Entry> {
     }
 }
 
-const CONSENT_QUESTION: &str = "\
+const STATS_QUESTION: &str = "\
 emoticond: one question, asked once.
 
-  the report menus in pickers (and `emoticond report`) let you say a search
-  was read wrong, a face doesn't fit, or a face is offensive. those reports
-  can be sent to improve the data for everyone. a report has your search,
-  how it was read, the face and the top 20 faces shown; nothing else
-  (no id, no history). nothing is sent unless you say yes, and only reports
-  made after you say yes. change it any time: emoticond reports on|off
+  share anonymous usage stats? once a day, a picker sends which faces got
+  picked for which built-in search words (counts rounded into ranges, never
+  what you typed), plus the version and the date. no id, no history. it
+  helps rank faces better for everyone, and tells me how many people use
+  this. change it any time: emoticond stats on|off
 
-send reports? [y/n] ";
+share usage stats? [y/n] ";
 
-/// The first interactive run asks "send reports?" (docs/collector.md), on
-/// a terminal only: a keybind, a script or a front-end never blocks here.
-/// There is no default: anything but y/yes/n/no asks again, and end of
-/// input leaves it unanswered (nothing is sent).
-fn ask_consent_once(app: &App) {
+/// The first interactive run asks about usage stats (docs/collector.md),
+/// on a terminal only: a keybind, a script or a front-end never blocks
+/// here. There is no default: anything but y/yes/n/no asks again, and end
+/// of input leaves it unanswered (nothing is sent).
+fn ask_stats_once(app: &mut App) {
     use std::io::{BufRead, IsTerminal, Write};
-    if !cfg!(feature = "net") || app.sending().off_by != Some("unasked") {
+    if !cfg!(feature = "net") || app.stats() != "unasked" {
         return;
     }
     if !std::io::stdin().is_terminal() || !std::io::stderr().is_terminal() {
         return;
     }
     let mut err = std::io::stderr();
-    let _ = write!(err, "{CONSENT_QUESTION}");
+    let _ = write!(err, "{STATS_QUESTION}");
     let mut line = String::new();
     loop {
         let _ = err.flush();
@@ -375,7 +376,7 @@ fn ask_consent_once(app: &App) {
             let _ = writeln!(err);
             return;
         }
-        let send = match line.trim().to_ascii_lowercase().as_str() {
+        let yes = match line.trim().to_ascii_lowercase().as_str() {
             "y" | "yes" => true,
             "n" | "no" => false,
             _ => {
@@ -383,9 +384,9 @@ fn ask_consent_once(app: &App) {
                 continue;
             }
         };
-        match app.set_consent(send) {
+        match app.set_consent(Topic::Stats, yes) {
             Ok(()) => {
-                let _ = writeln!(err, "{}\n", if send { "thanks! reports will be sent." } else { "ok, reports stay on this computer." });
+                let _ = writeln!(err, "{}\n", if yes { "thanks! (◕‿◕)" } else { "ok, nothing is shared." });
             }
             Err(e) => {
                 let _ = writeln!(err, "emoticond: {e}\n");
@@ -395,33 +396,38 @@ fn ask_consent_once(app: &App) {
     }
 }
 
-/// `emoticond reports [on|off]`: save the answer, or show where it stands.
-fn reports(app: &App, a: &Args) -> i32 {
+/// `emoticond reports|stats [on|off]`: save the answer, or show it.
+fn consent_cmd(app: &mut App, topic: Topic, a: &Args) -> i32 {
+    let name = if topic == Topic::Stats { "stats" } else { "reports" };
     let send = match a.pos.first().map(|s| s.to_ascii_lowercase()) {
         None => None,
         Some(w) if matches!(w.as_str(), "on" | "yes" | "y" | "true") => Some(true),
         Some(w) if matches!(w.as_str(), "off" | "no" | "n" | "false") => Some(false),
         Some(w) => {
-            eprintln!("emoticond reports: on or off, not {w:?}");
+            eprintln!("emoticond {name}: on or off, not {w:?}");
             return USAGE;
         }
     };
     if let Some(send) = send {
-        if let Err(e) = app.set_consent(send) {
-            eprintln!("emoticond reports: {e}");
+        if let Err(e) = app.set_consent(topic, send) {
+            eprintln!("emoticond {name}: {e}");
             return POLICY;
         }
     }
-    let s = app.sending();
-    println!(
-        "reports: {}",
-        match s.off_by {
-            None => "sent (emoticond reports off to stop)".to_string(),
-            Some("unasked") => "not chosen yet, so not sent (emoticond reports on|off)".to_string(),
-            Some("policy") => "not sent: turned off by your system administrator".to_string(),
-            Some(_) => "not sent (emoticond reports on to send them)".to_string(),
-        }
-    );
+    let state = match topic {
+        Topic::Reports => match app.sending().off_by {
+            None => "sent when you make them (emoticond reports off to stop)",
+            Some("policy") => "not sent: turned off by your system administrator",
+            Some(_) => "kept on this computer (emoticond reports on to send them)",
+        },
+        Topic::Stats => match app.stats() {
+            "on" => "shared once a day (emoticond stats off to stop)",
+            "unasked" => "not shared: not chosen yet (emoticond stats on|off)",
+            "policy" => "not shared: turned off by your system administrator",
+            _ => "not shared (emoticond stats on to share them)",
+        },
+    };
+    println!("{name}: {state}");
     OK
 }
 
@@ -451,11 +457,11 @@ fn run(cmd: &str, a: Args) -> i32 {
         Ok(x) => x,
         Err(c) => return c,
     };
-    if cmd == "reports" {
-        return reports(&app, &a);
-    }
-    if cmd != "menu" {
-        ask_consent_once(&app);
+    match cmd {
+        "reports" => return consent_cmd(&mut app, Topic::Reports, &a),
+        "stats" => return consent_cmd(&mut app, Topic::Stats, &a),
+        "menu" => {}
+        _ => ask_stats_once(&mut app),
     }
     let db = match open_db(&app.cfg) {
         Ok(d) => d,

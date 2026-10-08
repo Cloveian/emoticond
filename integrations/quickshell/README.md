@@ -59,9 +59,11 @@ ListView {
 - `offensive` removes the row from `results` straight away, because the
   daemon blocklists the face everywhere. `hiddenFace` is then set: show
   *Hidden. Undo* and call `undoHide()`.
-- While `consentNeeded` is true, show "send reports?" in the menu with a
-  yes and a no (neither preselected) and call `setConsent(true|false)`.
-  Nothing is sent until then; the answer is saved for every front-end.
+- While `statsNeeded` is true, ask once whether to share anonymous usage
+  stats (a yes and a no, neither preselected; for example a small row under
+  the search box) and call `setStats(true|false)`. Nothing is shared until
+  then; the answer is saved for every front-end. `setReports(bool)` is the
+  report-sending switch for a settings page.
 - Show `reportFooter` as a small line inside both menus. It is the shipped
   disclaimer text, never your own. `disclaimerText` is the full text.
 - The daemon keeps one report per query and target, and a later report

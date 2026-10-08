@@ -1,6 +1,6 @@
 pkgbase = emoticond-bin
 	pkgdesc = A (legitimately) clever kaomoji search engine: CLI, launcher menu and picker daemon (release binary)
-	pkgver = 1.0.1
+	pkgver = 1.0.2
 	pkgrel = 1
 	url = https://github.com/Cloveian/emoticond
 	install = emoticond.install
@@ -14,11 +14,11 @@ pkgbase = emoticond-bin
 	optdepends = xclip: copy picks on X11 (emoticond menu)
 	optdepends = wtype: type picks on Wayland (emoticond menu --action type)
 	optdepends = fuzzel: a launcher for emoticond menu (or rofi, wofi, tofi, bemenu, walker, dmenu)
-	provides = emoticond=1.0.1
+	provides = emoticond=1.0.2
 	conflicts = emoticond
-	source_x86_64 = https://github.com/Cloveian/emoticond/releases/download/v1.0.1/emoticond-v1.0.1-x86_64-unknown-linux-gnu.tar.gz
-	sha256sums_x86_64 = 89a8c72daa44a439ae23b1e827b207f51b976628948cffa2d14e00c37e17c0e3
-	source_aarch64 = https://github.com/Cloveian/emoticond/releases/download/v1.0.1/emoticond-v1.0.1-aarch64-unknown-linux-gnu.tar.gz
-	sha256sums_aarch64 = 5159ceb0de9a3c92be46b3bac12c6e08dac0bfdf98d8403d137e6c25b4c5bb98
+	source_x86_64 = https://github.com/Cloveian/emoticond/releases/download/v1.0.2/emoticond-v1.0.2-x86_64-unknown-linux-gnu.tar.gz
+	sha256sums_x86_64 = SKIP
+	source_aarch64 = https://github.com/Cloveian/emoticond/releases/download/v1.0.2/emoticond-v1.0.2-aarch64-unknown-linux-gnu.tar.gz
+	sha256sums_aarch64 = SKIP
 
 pkgname = emoticond-bin

@@ -41,9 +41,9 @@ data took.
  "counts":{"emoticon":69668},
  "features":["opts","ids","fields","explain","browse","similar","complete","get","pick","report",
              "block","usage","set_defaults","supersede","cancel","info","consent"],
- "disclaimer":{"version":2,"short":"Reports are saved on this computer until you choose whether to send them.",
+ "disclaimer":{"version":3,"short":"Reports are sent with your search, its reading and the top 20 faces shown.",
                "text":"Reporting helps improve emoticond search. …"},
- "sending":false,"sending_off_by":"unasked","popularity":"local","profile":"quickshell","warnings":[],"ms":1}
+ "sending":true,"stats":"unasked","popularity":"local","profile":"quickshell","warnings":[],"ms":1}
 ```
 
 - `version` is the code version (`X.Y.Z`); `data.version` is the data
@@ -51,15 +51,17 @@ data took.
 - `disclaimer.text` is the full text, to show once (see "Reports").
   `disclaimer.short` is the footer line for both report menus. Never write
   your own wording.
-- `sending` says whether reports are sent. When it is false,
-  `sending_off_by` says why: `unasked` (the user hasn't answered "send
-  reports?" yet; nothing is sent until they do), `user` (they said no, or
-  set `feedback.send = false`) or `policy` (the packager turned it off).
-  `disclaimer.short` already matches; show it as is.
-- **Asking.** While `sending_off_by` is `unasked`, ask once in your UI,
-  with no default (a yes and a no, nothing preselected), and send the
-  answer with `consent` (below). The answer is saved for every front-end
-  and the CLI, so a user is only ever asked once.
+- `sending` says whether reports are sent (on by default: clicking a
+  report item is the act of reporting). When it is false, `sending_off_by`
+  says why: `user` (`emoticond reports off`, or `feedback.send = false`) or
+  `policy` (the packager turned it off). `disclaimer.short` already matches;
+  show it as is.
+- `stats` is the anonymous usage stats answer: `unasked`, `on`, `off` or
+  `policy` (the packager ruled them out). **While it is `unasked`, ask once
+  in your UI**, with no default (a yes and a no, nothing preselected), and
+  send the answer with `consent` (below). Nothing is shared until the user
+  says yes. The answer is saved for every front-end and the CLI, so a user
+  is only ever asked once.
 - `popularity` is `off`, `local` (the default) or `shared`.
 - `warnings` lists config problems found at start: `{level, code, key, message}`.
 - Check `features` before using an optional op.
@@ -263,7 +265,7 @@ a face can be both `no_fit` and `offensive`. Un-choosing a menu item sends
 - **Sending.** `sent` is always false: reports are queued and the daemon
   sends them in the background once they are 2 minutes old
   (docs/collector.md), so one undone within that time is never sent.
-  `sending` tells you whether they will be sent. `sending_off_by` (`unasked`, `user` or `policy`) is present
+  `sending` tells you whether they will be sent. `sending_off_by` (`user` or `policy`) is present
   when sending is off. Show `footer` under the menu.
 - **Effects.** `effects` lists what was applied: `blocked`, `unblocked`,
   `picked`, `demoted` or `undemoted`. `skipped` lists effects that were not
@@ -281,19 +283,24 @@ a face can be both `no_fit` and `offensive`. Un-choosing a menu item sends
 
 ### `consent`
 
-The user's answer to "send reports?", asked in your UI while the ready
-line says `"sending_off_by":"unasked"`.
+The user's answer to the usage stats question (asked in your UI while the
+ready line says `"stats":"unasked"`), and/or a report-sending switch for a
+settings page.
 
 ```
-→ {"op":"consent","id":"c","send":true}
-← {"id":"c","ok":true,"sending":true,"footer":"Reports are sent with your search, its reading and the top 20 faces shown."}
+→ {"op":"consent","id":"c","stats":true}
+← {"id":"c","ok":true,"stats":"on","sending":true,"footer":"Reports are sent with your search, its reading and the top 20 faces shown."}
+→ {"op":"consent","id":"c2","reports":false}
 ```
 
 - Saved in `~/.local/state/emoticond/consent.json` for every front-end and
-  the CLI (`emoticond reports on|off` changes it later).
-- Yes sends only reports made from then on, never ones already queued.
-- `not_allowed` when `feedback.send` is set in a config file, the
-  environment or a flag (that wins), or the policy turned sending off.
+  the CLI (`emoticond stats on|off` and `emoticond reports on|off` change
+  it later).
+- Turning something on only sends what is made from then on. Saying no to
+  stats drops anything collected but not yet sent.
+- `not_allowed` when the config, the environment or a flag sets it
+  (`popularity.mode`, `feedback.send`; that wins), or the policy rules it
+  out.
 
 ### `block` / `unblock`
 

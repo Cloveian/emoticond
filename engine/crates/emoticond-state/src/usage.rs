@@ -10,8 +10,8 @@
 //!   history stays on disk until [`UsageStore::clear`].
 //! - `Local` (the default): picks are recorded here and used here.
 //! - `Shared`: as `Local`, plus a per-period tally of picks that rolls into
-//!   bucketed, anonymised batches in `outbox/` (options.md §4.3). Nothing in
-//!   this crate sends them yet.
+//!   bucketed, anonymised batches in `outbox/` (options.md §4.3), sent once
+//!   a day by [`UsageStore::send_stats`](crate::stats).
 
 use crate::error::{Error, Result};
 use crate::fsutil::{self, lock, read_optional, write_atomic};
@@ -136,6 +136,37 @@ impl UsageStore {
     /// Change settings (a settings page was saved). Takes effect at once.
     pub fn set_settings(&mut self, settings: UsageSettings) {
         self.settings = settings;
+    }
+
+    /// The data version that batches and stats uploads carry (set once the
+    /// data is open).
+    pub fn set_data_version(&mut self, data: &str) {
+        self.settings.stamp.data = data.to_string();
+    }
+
+    /// Change the mode (already capped by the policy), for example when the
+    /// user answers the usage-stats question.
+    pub fn set_mode(&mut self, mode: PopularityMode) {
+        self.settings.mode = mode;
+    }
+
+    /// Drop the shared tally and every unsent batch, keeping local history:
+    /// the user said no to usage stats, so nothing collected before is sent.
+    pub fn drop_shared(&mut self) -> Result<()> {
+        let _g = lock(&self.path)?;
+        let _ = std::fs::remove_file(self.tally_path());
+        for (p, _) in self.outbox_batches()? {
+            std::fs::remove_file(&p).map_err(|e| Error::io(&p, e))?;
+        }
+        Ok(())
+    }
+
+    pub(crate) fn outbox_dir(&self) -> &Path {
+        &self.outbox
+    }
+
+    pub(crate) fn stamp(&self) -> &EngineStamp {
+        &self.settings.stamp
     }
 
     pub fn mode(&self) -> PopularityMode {
@@ -408,7 +439,7 @@ pub struct OutboxCount {
 
 /// 32 hex digits from std's randomly keyed hasher (no RNG dependency).
 /// Only used to de-duplicate retries, so it need not be cryptographic.
-fn random_token() -> String {
+pub(crate) fn random_token() -> String {
     use std::hash::{BuildHasher, Hasher};
     use std::sync::atomic::{AtomicU64, Ordering};
     static N: AtomicU64 = AtomicU64::new(0);

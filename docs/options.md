@@ -270,7 +270,7 @@ One setting, three levels, plus a small number of supporting keys.
 |---|---|---|---|
 | `off` | no usage map; nothing recorded | nothing (existing history kept until "clear") | nothing |
 | `local` (**default**) | the front-end records picks, builds a decayed `UsageMap` and passes it per query | `$XDG_STATE_HOME/emoticond/usage.json` | nothing |
-| `shared` | as `local`, plus anonymised counts queued for upload | as local, plus `$XDG_STATE_HOME/emoticond/outbox/usage-*.json` | nothing yet: batches are queued, but there is no upload service |
+| `shared` | as `local`, plus anonymous usage stats (§4.3) | as local, plus `$XDG_STATE_HOME/emoticond/outbox/` | once a day: bucketed pick counts and an "in use" upload (collector.md) |
 
 `local` is the default: it never leaves the machine, it's what makes the
 picker learn "your" shrug, and it matches the "recently used" behaviour of
@@ -304,14 +304,14 @@ UsageMap {
 
 | Key | Type | Default | Notes |
 |---|---|---|---|
-| `popularity.mode` | `off` \| `local` \| `shared` | `local` | policy can cap it (`popularity.max`) |
+| `popularity.mode` | `off` \| `local` \| `shared` | `local` | policy can cap it (`popularity.max`). Unset, the user's answer to "share usage stats?" (asked once, `emoticond stats on\|off`) makes it `shared` or keeps `local` |
 | `popularity.half_life_days` | f32 1–3650 | 30 | exponential decay of each pick's weight |
 | `popularity.max_entries` | u32 | 5000 | (term, face) pairs kept; the lowest decayed weight is evicted first |
 | `popularity.store` | path | `$XDG_STATE_HOME/emoticond/usage.json` | aggregated decayed scores plus a last-updated time; **no raw query text, no timestamps per pick** |
 | `popularity.remember_terms` | bool | true | false keeps only `global` (no record of what you searched for) |
 | `popularity.weight` | `off` \| `low` \| `normal` \| `high` | `normal` | maps to `SearchOptions.usage_weight` |
 | `popularity.share_interval_days` | u16 | 7 | how often `shared` batches are queued |
-| `popularity.share_endpoint` | URL | none | where shared batches would go; policy may set it |
+| `popularity.share_endpoint` | URL | `https://emoticond.mewo.gay/v1/stats` | where usage stats go; policy may set it |
 
 ### 4.3 What `shared` records
 
@@ -328,7 +328,8 @@ The aim is per-concept "which face do people pick", the same thing
 - A server receiving these must drop the source IP and keep only aggregates
   across at least k installs before using a term.
 
-Shared counts would come back to users as **data updates** (new boosts and
+Batches are sent with the daily upload (collector.md, "Usage stats").
+Shared counts come back to users as **data updates** (new boosts and
 canonical candidates in the next data release), never as a live query-time
 service.
 
@@ -354,7 +355,7 @@ Two menus:
 1. Clicking an item **always creates a report**. The disclaimer is shown
    in the menu itself (a footer line, plus the full text the first time).
 2. The report goes into a local queue. The daemon's background sender
-   delivers it once it is 2 minutes old, if the user said yes to sending
+   delivers it once it is 2 minutes old, unless sending is off
    (collector.md).
 3. **Local effects happen immediately**, whether or not anything is sent:
    - *offensive or explicit*: the face is added to the user's blocklist
@@ -371,7 +372,7 @@ Two menus:
 | Key | Type | Default | Notes |
 |---|---|---|---|
 | `feedback.menus` | bool | true | show the menus at all; a front-end may hide them |
-| `feedback.send` | bool | unset | set here, it decides; unset, the user's answer to "send reports?" does (`emoticond reports on\|off`, asked once on first use), and with no answer nothing is sent. The policy can always turn it off |
+| `feedback.send` | bool | true | set here, it decides; unset, `emoticond reports on\|off` does (on by default). The policy can always turn it off |
 | `feedback.endpoint` | URL | `https://emoticond.mewo.gay/v1/reports` | policy may override, for example an org's own collector |
 | `feedback.queue` | path | `$XDG_STATE_HOME/emoticond/reports/queue.jsonl` | |
 | `feedback.queue_max` | u32 | 500 | the oldest is dropped beyond this |
@@ -379,9 +380,8 @@ Two menus:
 | `feedback.apply_locally` | bool | true | 5.1 step 3 |
 | `feedback.custom_max_chars` | u16 | 500 | hard cap on free text |
 
-Nothing is sent until the user says yes. Both the user (answering no,
-`emoticond reports off`, or `feedback.send = false`) and the packager (a
-policy lock) can turn sending off. Reports are still queued
+Both the user (`emoticond reports off`, or `feedback.send = false`) and
+the packager (a policy lock) can turn sending off. Reports are still queued
 and their local effects still apply; the menu footer then reads "saved on
 this computer only".
 
@@ -412,7 +412,7 @@ hostname.
 |---|---|
 | keystrokes, partial queries | never recorded |
 | picks | stored locally (aggregated) under `local`; under `shared` (opt-in), queued as bucketed per-concept counts |
-| reports | sent when the user clicks a report item, only if they said yes to sending |
+| reports | sent when the user clicks a report item (unless sending is off) |
 | dev pick log | off; never sent |
 
 ---
@@ -665,7 +665,8 @@ front-end).
 | `limit` | 40 | |
 | `explain` | `off` | `ui.show_reading = true` gives `reading` |
 | `popularity.mode` | `local` | |
-| `feedback.send` | unset: asked once, nothing sent until yes | |
+| `feedback.send` | true | |
+| usage stats (`popularity.mode = shared`) | asked once, nothing sent until yes | |
 | dev pick log | off | |
 | `daemon.idle_exit` | 120 | |
 | policy | none | |

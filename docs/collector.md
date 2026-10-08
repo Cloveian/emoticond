@@ -22,16 +22,36 @@ client (emoticond serve)  --HTTPS-->  Cloudflare tunnel  -->  Traefik  -->  emot
 - The endpoint is `feedback.endpoint`, default
   `https://emoticond.mewo.gay/v1/reports`. `EMOTICOND_REPORT_ENDPOINT`
   overrides it (`none` turns sending off; the tests set that).
-- **Nothing is sent until the user says yes.** `emoticond` asks once, on
-  the first run in a terminal ("send reports? [y/n]", no default), and a
-  picker can ask in its own UI (the protocol's `consent` op). The answer is
-  saved in `~/.local/state/emoticond/consent.json`; `emoticond reports
-  on|off` changes it. Yes only sends reports made after it. A
-  `feedback.send` set in a config file overrides the answer.
-- Sending is also off when the user says no or sets
-  `feedback.send = false`, when the policy disables reports, and in a build
+- Reports are sent by default: clicking a report item is the act of
+  reporting. Sending is off after `emoticond reports off` (saved in
+  `~/.local/state/emoticond/consent.json`) or `feedback.send = false`, when
+  the policy disables reports, and in a build
   without the `net` feature (`emoticond-cli` default features), which has no
   network code at all.
+
+## Usage stats
+
+Separate from reports, and **off until the user says yes**: `emoticond`
+asks once on the first run in a terminal ("share usage stats? [y/n]", no
+default), a picker asks in its own UI (the protocol's `consent` op), and
+`emoticond stats on|off` changes it later. `popularity.mode` set in a
+config file wins over the answer.
+
+- **What is sent:** once a day, from the picker daemon, one upload: the UTC
+  day, whether it is this install's first upload this week and this month,
+  the code and data versions, and the finished weekly batches of pick
+  counts (options.md §4.3: per built-in search word, which faces were
+  picked, counts rounded into 1, 2-4, 5-19, 20+). Never what was typed,
+  never an id.
+- **Active users:** the collector counts uploads per day, and the "first
+  this week/month" flags per week and month: installs that said yes,
+  without telling any two apart. `emoticond-collector stats` prints them.
+- **Retries** count once: every upload and batch has a random token.
+- Saying no drops anything collected but not yet sent. Picks made with the
+  CLI only are kept and go with the next daemon's upload.
+- The endpoint is `popularity.share_endpoint`, default
+  `https://emoticond.mewo.gay/v1/stats`; `EMOTICOND_STATS_ENDPOINT=none`
+  turns it off.
 
 ## Wire format
 

@@ -453,9 +453,10 @@ How did this search go?
   `feedback.disclaimer_seen`, show the full text once before creating the
   report (options.md §5.4). `disclaimer.short` already matches the
   sending state.
-- While the ready line says `"sending_off_by":"unasked"`, ask "send
-  reports?" once in the menu (a yes and a no, neither preselected) and send
-  the answer with `consent` (protocol.md).
+- While the ready line says `"stats":"unasked"`, ask once whether to share
+  anonymous usage stats (a yes and a no, neither preselected; somewhere the
+  user sees without opening a menu) and send the answer with `consent`
+  (protocol.md).
 - Choosing an item sends it at once. Choosing it again sends `clear` with
   `clears` set to that reason. The current choice stays visible while these
   results are shown. The note goes with the chosen reason, or as `note` if
