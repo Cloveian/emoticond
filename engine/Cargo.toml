@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/emoticond", "crates/emoticond-cli", "crates/emoticond-state", "crates/emoticond-config", "crates/emoticond-compile", "crates/emoticond-collector"]
 
 [workspace.package]
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 # std::fs::File::lock (advisory file locks, emoticond-state) is stable since 1.89.
@@ -14,10 +14,10 @@ homepage = "https://github.com/Cloveian/emoticond"
 
 # path for the workspace, version for crates.io
 [workspace.dependencies]
-emoticond = { path = "crates/emoticond", version = "1.0.0" }
-emoticond-compile = { path = "crates/emoticond-compile", version = "1.0.0" }
-emoticond-config = { path = "crates/emoticond-config", version = "1.0.0" }
-emoticond-state = { path = "crates/emoticond-state", version = "1.0.0" }
+emoticond = { path = "crates/emoticond", version = "1.0.1" }
+emoticond-compile = { path = "crates/emoticond-compile", version = "1.0.1" }
+emoticond-config = { path = "crates/emoticond-config", version = "1.0.1" }
+emoticond-state = { path = "crates/emoticond-state", version = "1.0.1" }
 
 [profile.release]
 opt-level = 3

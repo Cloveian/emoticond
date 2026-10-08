@@ -70,7 +70,9 @@ a `.kmj` built locally is version `dev` and always opens.
 
 ## releasing
 
-1. set the version in `engine/Cargo.toml` (`X.Y.Z`)
+1. set the version in `engine/Cargo.toml` (`X.Y.Z`), then rebuild the test
+   fixture, which records it: `EMOTICOND_BLESS_FIXTURE=1 cargo test -p
+   emoticond-compile --test tiny`
 2. a new Y: publish data `X.Y` to emoticond-data (the publish step checks
    the code is already at `X.Y.*`)
 3. commit, then `git tag vX.Y.Z && git push --tags`

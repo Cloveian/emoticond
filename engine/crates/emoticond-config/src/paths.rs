@@ -243,6 +243,11 @@ impl Paths {
     }
 
     /// Default report queue: `state_dir/reports/queue.jsonl`.
+    /// The answer to "send reports?" (`consent.json`).
+    pub fn consent_file(&self) -> PathBuf {
+        self.state_dir.join("consent.json")
+    }
+
     pub fn reports_queue(&self) -> PathBuf {
         self.state_dir.join("reports").join("queue.jsonl")
     }

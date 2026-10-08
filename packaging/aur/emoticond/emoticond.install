@@ -1,0 +1,9 @@
+post_install() {
+  cat <<'MSG'
+==> emoticond: reports you make from picker menus can be sent to improve the
+    data. nothing is sent unless you say yes: you're asked the first time you
+    run `emoticond` in a terminal, or decide now with
+      emoticond reports on    # or off
+==> data: install emoticond-data, or run `emoticond data fetch`
+MSG
+}

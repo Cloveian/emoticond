@@ -36,13 +36,17 @@ $ emoticond search "running late"     ε=ε=┏(0-0)┛   !!(((((っ;ﾟ∀ﾟ)�
 
 | | |
 |---|---|
-| arch (AUR) | `paru -S emoticond-bin emoticond-data` (or `emoticond` to build from source) |
+| arch | `makepkg -si` in `packaging/aur/emoticond-bin` and `packaging/aur/emoticond-data` (or `emoticond` to build from source) |
 | homebrew | `brew install Cloveian/emoticond/emoticond` |
 | cargo | `cargo binstall emoticond-cli`, or `cargo install emoticond-cli` to build (rust 1.89+) |
 | anything else | a binary from [releases](https://github.com/Cloveian/emoticond/releases) (linux x86_64/aarch64, macos apple silicon), on your PATH |
 
+> not on the AUR yet: after the recent AUR security incidents, new account
+> registration is paused, so i can't make an account to publish there. the
+> PKGBUILDs are ready, so `makepkg` gets you the same thing for now
+
 then get the data (~13 MB) into `~/.local/share/emoticond/` (not needed
-with `emoticond-data` from the AUR):
+with the `emoticond-data` package):
 
 ```sh
 emoticond data fetch                  # or --set full / lite, or a version like 1.0
@@ -62,6 +66,7 @@ emoticond browse                          # starter faces, then your recent pick
 emoticond similar "(╥﹏╥)"                 # faces like this one
 emoticond menu                            # pick with fuzzel/rofi/walker/wofi/tofi/bemenu/dmenu
 emoticond config show                     # every setting and where it came from
+emoticond reports on                      # send the reports you make (asked once otherwise)
 ```
 
 - `emoticond menu` is made for a keybind (hyprland:
@@ -137,11 +142,14 @@ kept in `~/.local/state/emoticond/`, shared by every front-end
 
 - **popularity:** faces you pick move up. stays on your computer
 - **reports** (from the picker's menus) apply right away on your machine:
-  offensive faces disappear, bad fits drop. they're also sent in to make the
-  data better, with the query, how it was read and the top 20 faces, and
-  nothing else
-  - undo within 2 minutes and it never gets sent
-  - `feedback.send = false` keeps them local (docs/collector.md)
+  offensive faces disappear, bad fits drop
+- **sending them is opt-in:** you're asked once ("send reports? [y/n]", no
+  default), and nothing leaves your computer until you say yes. a sent
+  report has the query, how it was read and the top 20 faces, and nothing
+  else (docs/collector.md)
+  - only reports made after you say yes; undo within 2 minutes and it never
+    gets sent
+  - change your mind any time: `emoticond reports on|off`
 - **blocking:** `emoticond block FACE` / `unblock FACE`
 - **overlays:** your own picks, phrases and boosts in `~/.config/emoticond/overlays/`
 

@@ -451,8 +451,11 @@ How did this search go?
 - The footer shows the **shipped** disclaimer text (`disclaimer.short`). It is
   never written by the front-end. When the shipped version is newer than
   `feedback.disclaimer_seen`, show the full text once before creating the
-  report (options.md §5.4). When `sending` is false, change the footer to
-  *Saved on this computer only*.
+  report (options.md §5.4). `disclaimer.short` already matches the
+  sending state.
+- While the ready line says `"sending_off_by":"unasked"`, ask "send
+  reports?" once in the menu (a yes and a no, neither preselected) and send
+  the answer with `consent` (protocol.md).
 - Choosing an item sends it at once. Choosing it again sends `clear` with
   `clears` set to that reason. The current choice stays visible while these
   results are shown. The note goes with the chosen reason, or as `note` if

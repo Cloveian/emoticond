@@ -25,9 +25,12 @@ fn ready_line_announces_v1() {
     }
     assert_eq!(r["protocol"], 1);
     assert!(r["features"].as_array().unwrap().iter().any(|f| f == "report"));
-    assert_eq!(r["disclaimer"]["version"], 1);
+    assert_eq!(r["disclaimer"]["version"], 2);
     assert!(r["disclaimer"]["text"].as_str().unwrap().contains("top 20"));
-    assert_eq!(r["sending"], true);
+    // nothing is sent until the user answers "send reports?"
+    assert_eq!(r["sending"], false);
+    assert_eq!(r["sending_off_by"], "unasked");
+    assert!(r["features"].as_array().unwrap().iter().any(|f| f == "consent"));
     assert_eq!(r["popularity"], "local");
     assert_eq!(d.finish(), 0);
 }
@@ -154,6 +157,11 @@ fn reports_from_both_menus_apply_and_share_state() {
     let before_other = ids(&other.ask(r#"{"op":"search","id":1,"q":"sad","opts":{"limit":25}}"#));
     assert!(before_other.contains(&victim));
 
+    // the user says yes to sending (asked by the front-end)
+    let c = d.ask(r#"{"op":"consent","id":"c","send":true}"#);
+    assert_eq!(c["ok"], true, "{c}");
+    assert_eq!(c["sending"], true);
+
     // face menu: offensive hides at once, here and (after a refresh) elsewhere
     let ack = d.ask(&format!(r#"{{"op":"report","id":2,"about":1,"reason":"offensive","face":"{victim}"}}"#));
     assert_eq!(ack["ok"], true, "{ack}");
@@ -179,7 +187,7 @@ fn reports_from_both_menus_apply_and_share_state() {
     assert_eq!(rep["shown"].as_array().unwrap().len(), 20);
     assert_eq!(rep["shown"][0], victim.as_str());
     assert!(rep["reading"].as_str().unwrap().contains("sad"));
-    assert_eq!(rep["disclaimer_version"], 1);
+    assert_eq!(rep["disclaimer_version"], 2);
 
     // clear: the Undo
     let ack = d.ask(&format!(r#"{{"op":"report","id":5,"about":1,"reason":"clear","face":"{victim}"}}"#));

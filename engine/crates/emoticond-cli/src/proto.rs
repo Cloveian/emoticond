@@ -23,7 +23,7 @@ pub const PROTOCOL: u32 = 1;
 /// Optional ops and behaviours a client can check for (`features`).
 pub const FEATURES: &[&str] = &[
     "opts", "ids", "fields", "explain", "browse", "similar", "complete", "get", "pick", "report", "block", "usage",
-    "set_defaults", "supersede", "cancel", "info",
+    "set_defaults", "supersede", "cancel", "info", "consent",
 ];
 
 /// How many search results `about` can point back to.
@@ -224,18 +224,22 @@ const SETTLE_MS: u64 = 120_000;
 /// kind of failure is logged once.
 #[cfg(feature = "net")]
 fn start_sender(app: &App) {
-    let Some((queue, policy, endpoint)) = app.sender_parts() else { return };
+    let Some((queue, endpoint, cfg)) = app.sender_parts() else { return };
     std::thread::spawn(move || {
         let mut sender = emoticond_state::HttpSender::new(Some(endpoint));
         let mut last_error = String::new();
         loop {
-            match queue.flush_settled(&mut sender, policy, now_ms(), SETTLE_MS) {
-                Ok(_) => last_error.clear(),
-                Err(e) => {
-                    let e = e.to_string();
-                    if e != last_error {
-                        eprintln!("emoticond: reports not sent yet: {e}");
-                        last_error = e;
+            // re-checked every round: the user may answer or change their mind
+            let (policy, since) = super::app::send_now(&cfg);
+            if policy.allows() {
+                match queue.flush_settled(&mut sender, policy, now_ms(), SETTLE_MS, since) {
+                    Ok(_) => last_error.clear(),
+                    Err(e) => {
+                        let e = e.to_string();
+                        if e != last_error {
+                            eprintln!("emoticond: reports not sent yet: {e}");
+                            last_error = e;
+                        }
                     }
                 }
             }
@@ -260,6 +264,7 @@ fn ready_line(app: &App, emo: Option<&Database>, ms: u128) -> String {
         .put("features", FEATURES)
         .put("disclaimer", json!({"version": DISCLAIMER_VERSION, "short": sending.footer(), "text": DISCLAIMER}))
         .put("sending", sending.on)
+        .put_if(sending.off_by.is_some(), "sending_off_by", sending.off_by)
         .put("popularity", app.popularity().as_str())
         .put("profile", &app.cfg.profile)
         .put("warnings", app.warnings())
@@ -318,6 +323,7 @@ impl Server {
             "report" => self.report(v, id),
             "block" | "unblock" => self.block(v, id, op == "block"),
             "set_defaults" => Some(self.set_defaults(v, id)),
+            "consent" => Some(self.consent(v, id)),
             "usage" => self.usage(v, id),
             "info" => Some(self.info(id)),
             "cancel" => None,
@@ -670,6 +676,26 @@ impl Server {
                 err_line(id, code, key, msg)
             }
         }
+    }
+
+    /// `{"op":"consent","send":true|false}`: the user's answer to "send
+    /// reports?", asked in the front-end's UI while the ready line says
+    /// `"sending_off_by":"unasked"`. Replies with the new sending state.
+    fn consent(&mut self, v: &Value, id: Option<&Value>) -> String {
+        let Some(send) = v.get("send").and_then(Value::as_bool) else {
+            return err_line(id, "bad_request", Some("send".into()), "\"send\" must be true or false");
+        };
+        if let Err(e) = self.app.set_consent(send) {
+            return err_line(id, "not_allowed", Some("send".into()), e);
+        }
+        let sending = self.app.sending();
+        Obj::new()
+            .put("id", id)
+            .put("ok", true)
+            .put("sending", sending.on)
+            .put_if(sending.off_by.is_some(), "sending_off_by", sending.off_by)
+            .put("footer", sending.footer())
+            .to_string()
     }
 
     fn usage(&mut self, v: &Value, id: Option<&Value>) -> Option<String> {

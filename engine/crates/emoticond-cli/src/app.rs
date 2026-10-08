@@ -15,7 +15,7 @@
 //!   with what was shown, for building eval sets. Off unless set.
 
 use emoticond::{Database, FaceId, LocalEffect, OverlaySource, Pick, PopularityMode, Reason, Report, SearchOptions, UsageMap, Warning};
-use emoticond_config::{ConfigError, Loader, Resolved};
+use emoticond_config::{ConfigError, Loader, ReportsChoice, Resolved};
 use emoticond_state::{
     disclaimer_footer, remove_from_blocklist, undemote, DevLog, FeedbackQueue, LocalEffects, PickLogRecord, QueueLimits, SendOff,
     SendPolicy, Shared, StatePaths, UsageSettings,
@@ -69,13 +69,14 @@ pub struct Submitted {
     pub error: Option<String>,
 }
 
-/// Whether reports are sent: the user's `feedback.send` and the packager's
-/// policy. Even when on, nothing leaves the machine until
-/// an endpoint exists; reports wait in the queue.
+/// Whether reports are sent: the user's choice (`feedback.send`, else their
+/// answer to "send reports?", else not asked: off) and the packager's
+/// policy. Even when on, nothing leaves the machine until an endpoint
+/// exists; reports wait in the queue.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Sending {
     pub on: bool,
-    /// `"user"` or `"policy"` when off.
+    /// `"user"`, `"policy"` or `"unasked"` when off.
     pub off_by: Option<&'static str>,
 }
 
@@ -85,6 +86,7 @@ impl Sending {
         disclaimer_footer(match self.off_by {
             None => SendPolicy::Allowed,
             Some("policy") => SendPolicy::Off(SendOff::Policy),
+            Some("unasked") => SendPolicy::Off(SendOff::Unasked),
             Some(_) => SendPolicy::Off(SendOff::User),
         })
     }
@@ -217,21 +219,37 @@ impl App {
 
     pub fn sending(&self) -> Sending {
         if self.cfg.policy.reports_disabled {
-            Sending { on: false, off_by: Some("policy") }
-        } else if !self.cfg.config.feedback.send {
-            Sending { on: false, off_by: Some("user") }
-        } else {
-            Sending { on: true, off_by: None }
+            return Sending { on: false, off_by: Some("policy") };
+        }
+        match self.cfg.reports_choice() {
+            ReportsChoice::Unasked => Sending { on: false, off_by: Some("unasked") },
+            c if !c.send() => Sending { on: false, off_by: Some("user") },
+            _ => Sending { on: true, off_by: None },
         }
     }
 
-    /// What a background sender needs: the queue, the send policy and the
-    /// endpoint. None when sending is off or there is nowhere to send.
+    /// Save the answer to "send reports?" (`consent.json`). Refused when
+    /// `feedback.send` is set in a config file, the environment or a flag
+    /// (that wins anyway) or the policy has turned sending off.
+    pub fn set_consent(&self, send: bool) -> Result<(), String> {
+        if self.cfg.policy.reports_disabled {
+            return Err("sending is turned off by your system administrator".into());
+        }
+        if let ReportsChoice::Set(_) = self.cfg.reports_choice() {
+            let from = self.cfg.source("feedback.send").map(|s| s.to_string()).unwrap_or_default();
+            return Err(format!("feedback.send is set in {from}, which wins; change it there"));
+        }
+        let c = emoticond_config::Consent { send, since_ms: now_ms() };
+        emoticond_config::consent::write(&self.cfg.paths.consent_file(), &c).map_err(|e| format!("saving {}: {e}", self.cfg.paths.consent_file().display()))
+    }
+
+    /// What a background sender needs: the queue and the endpoint. None
+    /// when there is nowhere to send. Whether to send is checked on every
+    /// round ([`send_now`]), so a later answer takes effect.
     #[cfg(feature = "net")]
-    pub fn sender_parts(&self) -> Option<(FeedbackQueue, SendPolicy, String)> {
+    pub fn sender_parts(&self) -> Option<(FeedbackQueue, String, Resolved)> {
         let endpoint = self.cfg.config.feedback.endpoint.clone().filter(|e| !e.trim().is_empty())?;
-        let policy = SendPolicy::new(&self.cfg.policy, self.cfg.config.feedback.send);
-        policy.allows().then(|| (self.queue.clone(), policy, endpoint))
+        Some((self.queue.clone(), endpoint, self.cfg.clone()))
     }
 
     /// Record a pick: local popularity (unless off) and the dev pick log
@@ -378,4 +396,15 @@ pub fn random_id() -> String {
         b = h.finish().to_le_bytes();
     }
     b.iter().map(|x| format!("{x:02x}")).collect()
+}
+
+/// The send policy right now, and the oldest report it may send.
+#[cfg(feature = "net")]
+pub fn send_now(cfg: &Resolved) -> (SendPolicy, u64) {
+    let choice = cfg.reports_choice();
+    let policy = match choice {
+        ReportsChoice::Unasked if !cfg.policy.reports_disabled => SendPolicy::Off(emoticond_state::SendOff::Unasked),
+        c => SendPolicy::new(&cfg.policy, c.send()),
+    };
+    (policy, choice.since_ms())
 }

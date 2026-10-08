@@ -21,7 +21,14 @@ client (emoticond serve)  --HTTPS-->  Cloudflare tunnel  -->  Traefik  -->  emot
   The CLI (`emoticond report`) only queues; the next daemon sends.
 - The endpoint is `feedback.endpoint`, default
   `https://emoticond.mewo.gay/v1/reports`. `EMOTICOND_REPORT_ENDPOINT`
-  overrides it (`none` turns sending off; the tests set that). Sending is off when the user sets
+  overrides it (`none` turns sending off; the tests set that).
+- **Nothing is sent until the user says yes.** `emoticond` asks once, on
+  the first run in a terminal ("send reports? [y/n]", no default), and a
+  picker can ask in its own UI (the protocol's `consent` op). The answer is
+  saved in `~/.local/state/emoticond/consent.json`; `emoticond reports
+  on|off` changes it. Yes only sends reports made after it. A
+  `feedback.send` set in a config file overrides the answer.
+- Sending is also off when the user says no or sets
   `feedback.send = false`, when the policy disables reports, and in a build
   without the `net` feature (`emoticond-cli` default features), which has no
   network code at all.

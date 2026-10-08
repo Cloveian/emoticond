@@ -40,10 +40,10 @@ data took.
  "data":{"path":"…/.local/share/emoticond/core.kmj","version":"1.0","dataset":"core","format":"3.1","faces":69668},
  "counts":{"emoticon":69668},
  "features":["opts","ids","fields","explain","browse","similar","complete","get","pick","report",
-             "block","usage","set_defaults","supersede","cancel","info"],
- "disclaimer":{"version":1,"short":"Reports are sent with your search, its reading and the top 20 faces shown.",
-               "text":"Reporting helps improve kaomoji search. …"},
- "sending":true,"popularity":"local","profile":"quickshell","warnings":[],"ms":1}
+             "block","usage","set_defaults","supersede","cancel","info","consent"],
+ "disclaimer":{"version":2,"short":"Reports are saved on this computer until you choose whether to send them.",
+               "text":"Reporting helps improve emoticond search. …"},
+ "sending":false,"sending_off_by":"unasked","popularity":"local","profile":"quickshell","warnings":[],"ms":1}
 ```
 
 - `version` is the code version (`X.Y.Z`); `data.version` is the data
@@ -51,9 +51,15 @@ data took.
 - `disclaimer.text` is the full text, to show once (see "Reports").
   `disclaimer.short` is the footer line for both report menus. Never write
   your own wording.
-- `sending` is false when the user (`feedback.send = false`) or the packager
-  (policy) turned sending off. The footer then reads *Reports are saved on
-  this computer only.*
+- `sending` says whether reports are sent. When it is false,
+  `sending_off_by` says why: `unasked` (the user hasn't answered "send
+  reports?" yet; nothing is sent until they do), `user` (they said no, or
+  set `feedback.send = false`) or `policy` (the packager turned it off).
+  `disclaimer.short` already matches; show it as is.
+- **Asking.** While `sending_off_by` is `unasked`, ask once in your UI,
+  with no default (a yes and a no, nothing preselected), and send the
+  answer with `consent` (below). The answer is saved for every front-end
+  and the CLI, so a user is only ever asked once.
 - `popularity` is `off`, `local` (the default) or `shared`.
 - `warnings` lists config problems found at start: `{level, code, key, message}`.
 - Check `features` before using an optional op.
@@ -81,7 +87,8 @@ Errors:
 ```
 
 Error codes: `bad_json`, `bad_request`, `unknown_op`, `invalid_option`,
-`not_found`, `unsupported` (no data loaded) and `internal`. The daemon never
+`not_found`, `not_allowed` (`consent` when the config or the policy decides),
+`unsupported` (no data loaded) and `internal`. The daemon never
 exits because of a bad request.
 
 ## Options (`opts`)
@@ -256,7 +263,7 @@ a face can be both `no_fit` and `offensive`. Un-choosing a menu item sends
 - **Sending.** `sent` is always false: reports are queued and the daemon
   sends them in the background once they are 2 minutes old
   (docs/collector.md), so one undone within that time is never sent.
-  `sending` tells you whether they will be sent. `sending_off_by` (`user` or `policy`) is present
+  `sending` tells you whether they will be sent. `sending_off_by` (`unasked`, `user` or `policy`) is present
   when sending is off. Show `footer` under the menu.
 - **Effects.** `effects` lists what was applied: `blocked`, `unblocked`,
   `picked`, `demoted` or `undemoted`. `skipped` lists effects that were not
@@ -271,6 +278,22 @@ a face can be both `no_fit` and `offensive`. Un-choosing a menu item sends
   once before the first report.
 - A face reason without `face`, an unknown `reason`, or a `note` without
   text is a `bad_request`. An unknown `face` is `not_found`.
+
+### `consent`
+
+The user's answer to "send reports?", asked in your UI while the ready
+line says `"sending_off_by":"unasked"`.
+
+```
+→ {"op":"consent","id":"c","send":true}
+← {"id":"c","ok":true,"sending":true,"footer":"Reports are sent with your search, its reading and the top 20 faces shown."}
+```
+
+- Saved in `~/.local/state/emoticond/consent.json` for every front-end and
+  the CLI (`emoticond reports on|off` changes it later).
+- Yes sends only reports made from then on, never ones already queued.
+- `not_allowed` when `feedback.send` is set in a config file, the
+  environment or a flag (that wins), or the policy turned sending off.
 
 ### `block` / `unblock`
 

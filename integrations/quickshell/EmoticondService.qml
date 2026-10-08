@@ -80,6 +80,12 @@ Singleton {
     property int disclaimerVersion: 0
     // False when the user or the packager turned report sending off.
     property bool sending: true
+    // "unasked" until the user answers "send reports?" (nothing is sent
+    // until then): show the question once (consentNeeded) and call
+    // setConsent(true|false). "user"/"policy" when they or the packager
+    // turned sending off.
+    property string sendingOffBy: ""
+    readonly property bool consentNeeded: root.sendingOffBy === "unasked"
     property string popularity: ""
 
     // ---- The shown search ---------------------------------------------------
@@ -97,9 +103,7 @@ Singleton {
 
     // ---- Report menus -------------------------------------------------------
     property string footer: ""
-    readonly property string reportFooter: root.footer.length > 0 ? root.footer
-        : !root.sending ? "Reports are saved on this computer only."
-        : root.disclaimerShort
+    readonly property string reportFooter: root.footer.length > 0 ? root.footer : root.disclaimerShort
     // "read_well" / "read_wrong" / ""; exclusive.
     property string readVerdict: ""
     property bool missing: false
@@ -168,6 +172,14 @@ Singleton {
 
     // `about` names the search; `q` lets the daemon rebuild the context if it
     // restarted since.
+    /** The user's answer to "send reports?" (saved by the engine for every front-end). */
+    function setConsent(send: bool): void {
+        if (!root.ready)
+            return;
+        root.sendingOffBy = send ? "" : "user";
+        root._send({ op: "consent", id: "consent", send: send });
+    }
+
     function _report(fields: var): void {
         if (!root.ready)
             return;
@@ -279,7 +291,8 @@ Singleton {
             root.disclaimerShort = msg.disclaimer?.short ?? "";
             root.disclaimerText = msg.disclaimer?.text ?? "";
             root.disclaimerVersion = msg.disclaimer?.version ?? 0;
-            root.sending = msg.sending ?? true;
+            root.sending = msg.sending ?? false;
+            root.sendingOffBy = msg.sending_off_by ?? "";
             root.popularity = msg.popularity ?? "";
             root.failed = false;
             startWatchdog.stop();
@@ -299,11 +312,13 @@ Singleton {
             return;
         }
         if (typeof msg.id === "string") {
-            if (msg.id.startsWith("r")) {
+            if (msg.id === "consent" || msg.id.startsWith("r")) {
                 if (msg.footer)
                     root.footer = msg.footer;
-                if (msg.sending !== undefined)
+                if (msg.sending !== undefined) {
                     root.sending = msg.sending;
+                    root.sendingOffBy = msg.sending_off_by ?? "";
+                }
                 root.reportAcked(msg);
             }
             return;

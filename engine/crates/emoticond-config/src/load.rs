@@ -624,7 +624,20 @@ impl Resolved {
     /// True when the user and the policy both allow sending reports.
     /// Reports still need an endpoint before anything leaves the machine.
     pub fn send_reports(&self) -> bool {
-        self.config.feedback.send && !self.policy.reports_disabled
+        self.reports_choice().send() && !self.policy.reports_disabled
+    }
+
+    /// Where sending stands, before the policy: `feedback.send` when a file,
+    /// the environment or a flag set it, else the saved answer
+    /// (`consent.json`), else unasked.
+    pub fn reports_choice(&self) -> crate::ReportsChoice {
+        if !matches!(self.source("feedback.send"), None | Some(Source::Default)) {
+            return crate::ReportsChoice::Set(self.config.feedback.send);
+        }
+        match crate::consent::read(&self.paths.consent_file()) {
+            Some(c) => crate::ReportsChoice::Answered(c),
+            None => crate::ReportsChoice::Unasked,
+        }
     }
 
     /// Where the effective value of `key` came from.

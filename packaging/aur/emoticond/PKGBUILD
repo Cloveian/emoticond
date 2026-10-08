@@ -1,6 +1,6 @@
 # Maintainer: Cloveian <146399971+Cloveian@users.noreply.github.com>
 pkgname=emoticond
-pkgver=1.0.0
+pkgver=1.0.1
 pkgrel=1
 pkgdesc='Search kaomoji by how you feel: CLI, launcher menu and picker daemon'
 arch=('x86_64' 'aarch64')
@@ -13,11 +13,12 @@ optdepends=('emoticond-data: kaomoji data for every user (or run `emoticond data
             'xclip: copy picks on X11 (emoticond menu)'
             'wtype: type picks on Wayland (emoticond menu --action type)'
             'fuzzel: a launcher for emoticond menu (or rofi, wofi, tofi, bemenu, walker, dmenu)')
+install=emoticond.install
 conflicts=('emoticond-bin')
 # makepkg's C LTO flags break ring's objects under Rust's own LTO
 options=('!lto')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha256sums=('97fe1751acaef53e5fb0881bc30ed79cacb849f9173e91d18351377bcfadf394')
+sha256sums=('SKIP') # updpkgsums once v1.0.1 is tagged
 
 prepare() {
   cd "$pkgname-$pkgver/engine"

@@ -46,6 +46,7 @@ usage:
   emoticond menu [--launcher L] [--action copy|type|print] [OPTIONS]
   emoticond serve [--idle SECS] [--frontend NAME]      (stdio protocol, docs/protocol.md)
   emoticond config [show]        emoticond info [--json]
+  emoticond reports [on|off]     (send the reports you make? shows the choice without on/off)
   emoticond data fetch [X.Y] [--set core|full|lite]   (download data into ~/.local/share/emoticond)
 
 report reasons:
@@ -245,7 +246,7 @@ pub fn main(args: &[String]) -> i32 {
             OK
         }
         "search" | "explain" | "get" | "similar" | "complete" | "browse" | "pick" | "report" | "block" | "unblock" | "serve" | "menu"
-        | "config" | "info" | "data" => {
+        | "config" | "info" | "data" | "reports" => {
             let a = match parse(cmd, &args[2..]) {
                 Ok(a) => a,
                 Err(e) => {
@@ -340,6 +341,90 @@ pub fn resolve(db: &Database, s: &str) -> Option<Entry> {
     }
 }
 
+const CONSENT_QUESTION: &str = "\
+emoticond: one question, asked once.
+
+  the report menus in pickers (and `emoticond report`) let you say a search
+  was read wrong, a face doesn't fit, or a face is offensive. those reports
+  can be sent to improve the data for everyone. a report has your search,
+  how it was read, the face and the top 20 faces shown; nothing else
+  (no id, no history). nothing is sent unless you say yes, and only reports
+  made after you say yes. change it any time: emoticond reports on|off
+
+send reports? [y/n] ";
+
+/// The first interactive run asks "send reports?" (docs/collector.md), on
+/// a terminal only: a keybind, a script or a front-end never blocks here.
+/// There is no default: anything but y/yes/n/no asks again, and end of
+/// input leaves it unanswered (nothing is sent).
+fn ask_consent_once(app: &App) {
+    use std::io::{BufRead, IsTerminal, Write};
+    if !cfg!(feature = "net") || app.sending().off_by != Some("unasked") {
+        return;
+    }
+    if !std::io::stdin().is_terminal() || !std::io::stderr().is_terminal() {
+        return;
+    }
+    let mut err = std::io::stderr();
+    let _ = write!(err, "{CONSENT_QUESTION}");
+    let mut line = String::new();
+    loop {
+        let _ = err.flush();
+        line.clear();
+        if std::io::stdin().lock().read_line(&mut line).unwrap_or(0) == 0 {
+            let _ = writeln!(err);
+            return;
+        }
+        let send = match line.trim().to_ascii_lowercase().as_str() {
+            "y" | "yes" => true,
+            "n" | "no" => false,
+            _ => {
+                let _ = write!(err, "y or n: ");
+                continue;
+            }
+        };
+        match app.set_consent(send) {
+            Ok(()) => {
+                let _ = writeln!(err, "{}\n", if send { "thanks! reports will be sent." } else { "ok, reports stay on this computer." });
+            }
+            Err(e) => {
+                let _ = writeln!(err, "emoticond: {e}\n");
+            }
+        }
+        return;
+    }
+}
+
+/// `emoticond reports [on|off]`: save the answer, or show where it stands.
+fn reports(app: &App, a: &Args) -> i32 {
+    let send = match a.pos.first().map(|s| s.to_ascii_lowercase()) {
+        None => None,
+        Some(w) if matches!(w.as_str(), "on" | "yes" | "y" | "true") => Some(true),
+        Some(w) if matches!(w.as_str(), "off" | "no" | "n" | "false") => Some(false),
+        Some(w) => {
+            eprintln!("emoticond reports: on or off, not {w:?}");
+            return USAGE;
+        }
+    };
+    if let Some(send) = send {
+        if let Err(e) = app.set_consent(send) {
+            eprintln!("emoticond reports: {e}");
+            return POLICY;
+        }
+    }
+    let s = app.sending();
+    println!(
+        "reports: {}",
+        match s.off_by {
+            None => "sent (emoticond reports off to stop)".to_string(),
+            Some("unasked") => "not chosen yet, so not sent (emoticond reports on|off)".to_string(),
+            Some("policy") => "not sent: turned off by your system administrator".to_string(),
+            Some(_) => "not sent (emoticond reports on to send them)".to_string(),
+        }
+    );
+    OK
+}
+
 fn run(cmd: &str, a: Args) -> i32 {
     match cmd {
         "config" => return config(&a),
@@ -366,6 +451,12 @@ fn run(cmd: &str, a: Args) -> i32 {
         Ok(x) => x,
         Err(c) => return c,
     };
+    if cmd == "reports" {
+        return reports(&app, &a);
+    }
+    if cmd != "menu" {
+        ask_consent_once(&app);
+    }
     let db = match open_db(&app.cfg) {
         Ok(d) => d,
         Err(c) => return c,

@@ -354,7 +354,8 @@ Two menus:
 1. Clicking an item **always creates a report**. The disclaimer is shown
    in the menu itself (a footer line, plus the full text the first time).
 2. The report goes into a local queue. The daemon's background sender
-   delivers it once it is 2 minutes old, if sending is on (collector.md).
+   delivers it once it is 2 minutes old, if the user said yes to sending
+   (collector.md).
 3. **Local effects happen immediately**, whether or not anything is sent:
    - *offensive or explicit*: the face is added to the user's blocklist
      (`$XDG_STATE_HOME/emoticond/blocklist.txt`) and hidden at once.
@@ -370,7 +371,7 @@ Two menus:
 | Key | Type | Default | Notes |
 |---|---|---|---|
 | `feedback.menus` | bool | true | show the menus at all; a front-end may hide them |
-| `feedback.send` | bool | true | reports are only *sent* when this is true **and** policy allows it |
+| `feedback.send` | bool | unset | set here, it decides; unset, the user's answer to "send reports?" does (`emoticond reports on\|off`, asked once on first use), and with no answer nothing is sent. The policy can always turn it off |
 | `feedback.endpoint` | URL | `https://emoticond.mewo.gay/v1/reports` | policy may override, for example an org's own collector |
 | `feedback.queue` | path | `$XDG_STATE_HOME/emoticond/reports/queue.jsonl` | |
 | `feedback.queue_max` | u32 | 500 | the oldest is dropped beyond this |
@@ -378,8 +379,9 @@ Two menus:
 | `feedback.apply_locally` | bool | true | 5.1 step 3 |
 | `feedback.custom_max_chars` | u16 | 500 | hard cap on free text |
 
-Both the user (`feedback.send = false`, an advanced setting) and the
-packager (a policy lock) can turn sending off. Reports are still queued
+Nothing is sent until the user says yes. Both the user (answering no,
+`emoticond reports off`, or `feedback.send = false`) and the packager (a
+policy lock) can turn sending off. Reports are still queued
 and their local effects still apply; the menu footer then reads "saved on
 this computer only".
 
@@ -410,7 +412,7 @@ hostname.
 |---|---|
 | keystrokes, partial queries | never recorded |
 | picks | stored locally (aggregated) under `local`; under `shared` (opt-in), queued as bucketed per-concept counts |
-| reports | sent when the user clicks a report item (unless sending is off) |
+| reports | sent when the user clicks a report item, only if they said yes to sending |
 | dev pick log | off; never sent |
 
 ---
@@ -663,7 +665,7 @@ front-end).
 | `limit` | 40 | |
 | `explain` | `off` | `ui.show_reading = true` gives `reading` |
 | `popularity.mode` | `local` | |
-| `feedback.send` | true | |
+| `feedback.send` | unset: asked once, nothing sent until yes | |
 | dev pick log | off | |
 | `daemon.idle_exit` | 120 | |
 | policy | none | |

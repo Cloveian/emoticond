@@ -57,9 +57,10 @@ pub const DEFAULT_REPORT_ENDPOINT: &str = "https://emoticond.mewo.gay/v1/reports
 pub struct FeedbackSettings {
     /// Show the report menus at all.
     pub menus: bool,
-    /// The user's own switch. Reports are only sent when this is true **and**
-    /// the policy allows it (see `Resolved::send_reports`) and an endpoint
-    /// exists. Both the user and the packager can turn it off.
+    /// The user's own switch, when set in a config file, the environment or
+    /// a flag; otherwise the saved answer to "send reports?" decides
+    /// (`consent`, `Resolved::reports_choice`), and with no answer nothing
+    /// is sent. The policy can always turn it off.
     pub send: bool,
     /// Report collector ([`DEFAULT_REPORT_ENDPOINT`]); policy may set it,
     /// and an empty value means nowhere.
@@ -81,7 +82,7 @@ impl Default for FeedbackSettings {
     fn default() -> Self {
         FeedbackSettings {
             menus: true,
-            send: true,
+            send: false,
             endpoint: Some(DEFAULT_REPORT_ENDPOINT.to_string()),
             queue: None,
             queue_max: 500,

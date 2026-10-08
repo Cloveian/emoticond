@@ -57,14 +57,16 @@ fn defaults_are_the_stranger_defaults() {
     assert_eq!(c.popularity.half_life_days, 30.0);
     assert_eq!(c.popularity.max_entries, 5000);
     assert!(c.popularity.remember_terms);
-    assert!(c.feedback.send && c.feedback.menus && c.feedback.apply_locally);
+    assert!(!c.feedback.send && c.feedback.menus && c.feedback.apply_locally);
+    // not set anywhere and never answered: nothing is sent
+    assert_eq!(r.reports_choice(), emoticond_config::ReportsChoice::Unasked);
+    assert!(!r.send_reports());
     assert_eq!((c.feedback.queue_max, c.feedback.queue_max_age_days, c.feedback.custom_max_chars), (500, 180, 500));
     assert_eq!(c.feedback.endpoint.as_deref(), Some(emoticond_config::DEFAULT_REPORT_ENDPOINT));
     assert_eq!(c.dev.pick_log, None);
     assert_eq!(c.daemon.idle_exit, 120);
     assert_eq!(c.data.dataset, Dataset::Core);
     assert!(r.policy.is_open() && r.locks.is_empty());
-    assert!(r.send_reports());
     // Paths filled in.
     let p = Paths::rooted(&root);
     assert_eq!(c.popularity.store.as_deref(), Some(p.usage_file().as_path()));

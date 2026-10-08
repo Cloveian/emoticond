@@ -247,3 +247,15 @@ fn offensive_submit_hides_at_once_even_when_sending_is_locked() {
     locked.reports_disabled = true;
     assert!(q.flush(&mut Mock::default(), SendPolicy::new(&locked, true), 11).unwrap_err().is_sending_locked());
 }
+
+#[test]
+fn reports_before_consent_are_never_sent() {
+    let (_d, _p, q) = setup();
+    q.append(&report("old", 1_000, "idk", Target::Query, Reason::ReadWell), 1_000).unwrap();
+    q.append(&report("new", 5_000, "meh", Target::Query, Reason::ReadWell), 5_000).unwrap();
+    let mut m = Mock::default();
+    // the user said yes at t=3000: only the report made after that goes
+    let out = q.flush_settled(&mut m, SendPolicy::Allowed, 10_000, 0, 3_000).unwrap();
+    assert_eq!(out.sent, 1);
+    assert_eq!(m.seen, ["new"]);
+}
