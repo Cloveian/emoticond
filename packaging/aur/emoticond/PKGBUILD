@@ -18,7 +18,7 @@ conflicts=('emoticond-bin')
 # makepkg's C LTO flags break ring's objects under Rust's own LTO
 options=('!lto')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha256sums=('SKIP') # updpkgsums once v1.0.1 is tagged
+sha256sums=('102a7d69dccff0738a4e2f719374aff50ca590797364d3d3ddb23a9405561e80')
 
 prepare() {
   cd "$pkgname-$pkgver/engine"
