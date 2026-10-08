@@ -3,10 +3,16 @@ name = "emoticond-config"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "config.toml, policy.toml, env aliases and platform paths for the kaomoji library"
+rust-version.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords = ["kaomoji", "emoticon", "config"]
+categories = ["config"]
+description = "Config files, policy, environment and platform paths for emoticond"
 
 [dependencies]
-emoticond = { path = "../emoticond" }
+emoticond = { workspace = true }
 serde = "1"
 serde_json = "1"
 thiserror = "2.0.21"

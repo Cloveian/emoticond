@@ -1,0 +1,18 @@
+pkgbase = emoticond-data
+	pkgdesc = Kaomoji data for emoticond (core and full sets), installed for every user
+	pkgver = 1.0
+	pkgrel = 1
+	url = https://github.com/Cloveian/emoticond-data
+	arch = any
+	license = CC-BY-4.0
+	optdepends = emoticond>=1: the search engine (or emoticond-bin)
+	noextract = emoticond-core-1.0.kmj
+	noextract = emoticond-full-1.0.kmj
+	source = emoticond-core-1.0.kmj::https://raw.githubusercontent.com/Cloveian/emoticond-data/main/1.0/core.kmj
+	source = emoticond-full-1.0.kmj::https://raw.githubusercontent.com/Cloveian/emoticond-data/main/1.0/full.kmj
+	source = LICENSE-DATA-1.0::https://raw.githubusercontent.com/Cloveian/emoticond-data/main/LICENSE
+	sha256sums = 3e36cbcb107a60c74baf116a2b617b112c82cf53f8ea67d5973f649ad65e2cc1
+	sha256sums = dc493850c98621780073c8e75d009eb1179ed441e8083748e49189d680c4cd2d
+	sha256sums = d557539df68e771cc1eedcc91d13f70fca930e508d11eedcafa4b15db49e3744
+
+pkgname = emoticond-data

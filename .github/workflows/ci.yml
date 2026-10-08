@@ -20,3 +20,4 @@ jobs:
           workspaces: engine
       - run: cargo test --workspace
       - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo clippy -p emoticond-cli --no-default-features --all-targets -- -D warnings

@@ -1,0 +1,26 @@
+# Maintainer: Cloveian <146399971+Cloveian@users.noreply.github.com>
+pkgname=emoticond-data
+pkgver=1.0
+pkgrel=1
+pkgdesc='Kaomoji data for emoticond (core and full sets), installed for every user'
+arch=('any')
+url='https://github.com/Cloveian/emoticond-data'
+license=('CC-BY-4.0')
+# emoticond X.*.* reads data X.*
+optdepends=("emoticond>=${pkgver%%.*}: the search engine (or emoticond-bin)")
+_raw=https://raw.githubusercontent.com/Cloveian/emoticond-data/main/$pkgver
+source=("emoticond-core-$pkgver.kmj::$_raw/core.kmj"
+        "emoticond-full-$pkgver.kmj::$_raw/full.kmj"
+        "LICENSE-DATA-$pkgver::https://raw.githubusercontent.com/Cloveian/emoticond-data/main/LICENSE")
+noextract=("emoticond-core-$pkgver.kmj" "emoticond-full-$pkgver.kmj")
+sha256sums=('3e36cbcb107a60c74baf116a2b617b112c82cf53f8ea67d5973f649ad65e2cc1'
+            'dc493850c98621780073c8e75d009eb1179ed441e8083748e49189d680c4cd2d'
+            'd557539df68e771cc1eedcc91d13f70fca930e508d11eedcafa4b15db49e3744')
+
+package() {
+  # emoticond looks in /usr/share/emoticond after the user's own data dir;
+  # core.kmj is the default set, full.kmj is used with [data] dataset = "full"
+  install -Dm644 "emoticond-core-$pkgver.kmj" "$pkgdir/usr/share/emoticond/core.kmj"
+  install -Dm644 "emoticond-full-$pkgver.kmj" "$pkgdir/usr/share/emoticond/full.kmj"
+  install -Dm644 "LICENSE-DATA-$pkgver" "$pkgdir/usr/share/licenses/$pkgname/LICENSE-DATA"
+}

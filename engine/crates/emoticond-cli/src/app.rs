@@ -227,6 +227,7 @@ impl App {
 
     /// What a background sender needs: the queue, the send policy and the
     /// endpoint. None when sending is off or there is nowhere to send.
+    #[cfg(feature = "net")]
     pub fn sender_parts(&self) -> Option<(FeedbackQueue, SendPolicy, String)> {
         let endpoint = self.cfg.config.feedback.endpoint.clone().filter(|e| !e.trim().is_empty())?;
         let policy = SendPolicy::new(&self.cfg.policy, self.cfg.config.feedback.send);

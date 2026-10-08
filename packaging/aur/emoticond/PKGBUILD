@@ -1,0 +1,49 @@
+# Maintainer: Cloveian <146399971+Cloveian@users.noreply.github.com>
+pkgname=emoticond
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='Search kaomoji by how you feel: CLI, launcher menu and picker daemon'
+arch=('x86_64' 'aarch64')
+url='https://github.com/Cloveian/emoticond'
+license=('MIT OR Apache-2.0')
+depends=('gcc-libs' 'glibc')
+makedepends=('cargo')
+optdepends=('emoticond-data: kaomoji data for every user (or run `emoticond data fetch`)'
+            'wl-clipboard: copy picks on Wayland (emoticond menu)'
+            'xclip: copy picks on X11 (emoticond menu)'
+            'wtype: type picks on Wayland (emoticond menu --action type)'
+            'fuzzel: a launcher for emoticond menu (or rofi, wofi, tofi, bemenu, walker, dmenu)')
+conflicts=('emoticond-bin')
+# makepkg's C LTO flags break ring's objects under Rust's own LTO
+options=('!lto')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha256sums=('97fe1751acaef53e5fb0881bc30ed79cacb849f9173e91d18351377bcfadf394')
+
+prepare() {
+  cd "$pkgname-$pkgver/engine"
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd "$pkgname-$pkgver/engine"
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  cargo build --frozen --release -p emoticond-cli
+}
+
+check() {
+  cd "$pkgname-$pkgver/engine"
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  cargo test --frozen --workspace --exclude emoticond-collector
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm755 engine/target/release/emoticond -t "$pkgdir/usr/bin"
+  install -Dm644 LICENSE-MIT LICENSE-APACHE -t "$pkgdir/usr/share/licenses/$pkgname"
+  install -Dm644 README.md -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm644 docs/*.md -t "$pkgdir/usr/share/doc/$pkgname/docs"
+  install -Dm644 integrations/quickshell/* -t "$pkgdir/usr/share/doc/$pkgname/integrations/quickshell"
+}

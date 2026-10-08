@@ -3,6 +3,13 @@ name = "emoticond"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords = ["kaomoji", "emoticon", "search", "emotion", "text"]
+categories = ["text-processing", "data-structures"]
+readme = "../../../README.md"
 description = "Search kaomoji by how you feel"
 
 [dependencies]

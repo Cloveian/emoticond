@@ -6,12 +6,15 @@
 //! Without a VERSION it takes the newest data this build can read
 //! (`emoticond::DATA_COMPAT`).
 
-use super::cli::{Args, IO, OK, USAGE};
+use super::cli::{Args, USAGE};
+#[cfg(feature = "net")]
+use super::cli::{IO, OK};
 
 /// Where the files are, one folder per version (`$EMOTICOND_DATA_URL`
 /// overrides it, for a mirror).
 pub const DATA_URL: &str = "https://raw.githubusercontent.com/Cloveian/emoticond-data/main";
 
+#[cfg(feature = "net")]
 const SETS: &[&str] = &["core", "full", "lite"];
 
 pub fn data(a: &Args) -> i32 {

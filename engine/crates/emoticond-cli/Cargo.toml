@@ -1,8 +1,16 @@
 [package]
 name = "emoticond-cli"
+description = "emoticond: search kaomoji by how you feel, from the command line, a launcher menu or a picker daemon"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords = ["kaomoji", "emoticon", "picker", "cli"]
+categories = ["command-line-utilities", "text-processing"]
+readme = "../../../README.md"
 
 [[bin]]
 name = "emoticond"
@@ -10,10 +18,10 @@ path = "src/main.rs"
 doc = false
 
 [dependencies]
-emoticond = { path = "../emoticond", features = ["unstable-tuning"] }
-emoticond-compile = { path = "../emoticond-compile" }
-emoticond-config = { path = "../emoticond-config", features = ["unstable-tuning"] }
-emoticond-state = { path = "../emoticond-state" }
+emoticond = { workspace = true, features = ["unstable-tuning"] }
+emoticond-compile = { workspace = true }
+emoticond-config = { workspace = true, features = ["unstable-tuning"] }
+emoticond-state = { workspace = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = { version = "0.10", optional = true }
@@ -24,3 +32,9 @@ default = ["net"]
 # Send queued reports to the collector (docs/collector.md). A build
 # without it never sends: the packager's compile-time kill switch.
 net = ["emoticond-state/net", "dep:ureq", "dep:sha2"]
+
+# `cargo binstall emoticond-cli` downloads the release archive instead of building
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/emoticond-v{ version }-{ target }.tar.gz"
+bin-dir = "emoticond-v{ version }-{ target }/{ bin }{ binary-ext }"
+pkg-fmt = "tgz"

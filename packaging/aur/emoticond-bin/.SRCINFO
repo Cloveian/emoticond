@@ -1,0 +1,23 @@
+pkgbase = emoticond-bin
+	pkgdesc = Search kaomoji by how you feel: CLI, launcher menu and picker daemon (release binary)
+	pkgver = 1.0.0
+	pkgrel = 1
+	url = https://github.com/Cloveian/emoticond
+	arch = x86_64
+	arch = aarch64
+	license = MIT OR Apache-2.0
+	depends = gcc-libs
+	depends = glibc
+	optdepends = emoticond-data: kaomoji data for every user (or run `emoticond data fetch`)
+	optdepends = wl-clipboard: copy picks on Wayland (emoticond menu)
+	optdepends = xclip: copy picks on X11 (emoticond menu)
+	optdepends = wtype: type picks on Wayland (emoticond menu --action type)
+	optdepends = fuzzel: a launcher for emoticond menu (or rofi, wofi, tofi, bemenu, walker, dmenu)
+	provides = emoticond=1.0.0
+	conflicts = emoticond
+	source_x86_64 = https://github.com/Cloveian/emoticond/releases/download/v1.0.0/emoticond-v1.0.0-x86_64-unknown-linux-gnu.tar.gz
+	sha256sums_x86_64 = a28f34b06aaf0dd34cb9b78ab3ae8690f0477f3eb45608cae9ec94a69191cb00
+	source_aarch64 = https://github.com/Cloveian/emoticond/releases/download/v1.0.0/emoticond-v1.0.0-aarch64-unknown-linux-gnu.tar.gz
+	sha256sums_aarch64 = 225836511f94cc9a821a1c08f7183f72713e71aa7073182daaeeb444e0281b84
+
+pkgname = emoticond-bin

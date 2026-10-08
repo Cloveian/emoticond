@@ -34,16 +34,15 @@ $ emoticond search "running late"     ε=ε=┏(0-0)┛   !!(((((っ;ﾟ∀ﾟ)�
 
 ## install
 
-grab a binary (linux x86_64/aarch64, macos apple silicon) from
-[releases](https://github.com/Cloveian/emoticond/releases) and put
-`emoticond` on your PATH, or build it (rust 1.89+):
+| | |
+|---|---|
+| arch (AUR) | `paru -S emoticond-bin emoticond-data` (or `emoticond` to build from source) |
+| homebrew | `brew install Cloveian/emoticond/emoticond` |
+| cargo | `cargo binstall emoticond-cli`, or `cargo install emoticond-cli` to build (rust 1.89+) |
+| anything else | a binary from [releases](https://github.com/Cloveian/emoticond/releases) (linux x86_64/aarch64, macos apple silicon), on your PATH |
 
-```sh
-git clone https://github.com/Cloveian/emoticond && cd emoticond/engine
-cargo install --path crates/emoticond-cli
-```
-
-then get the data (~13 MB) into `~/.local/share/emoticond/`:
+then get the data (~13 MB) into `~/.local/share/emoticond/` (not needed
+with `emoticond-data` from the AUR):
 
 ```sh
 emoticond data fetch                  # or --set full / lite, or a version like 1.0
@@ -52,8 +51,6 @@ emoticond data fetch                  # or --set full / lite, or a version like 
 every version lives in [emoticond-data](https://github.com/Cloveian/emoticond-data),
 one file per set, so you can also just download one. `emoticond info` tells you
 what it found and where it looked.
-
-> not on crates.io yet
 
 ## command line
 
@@ -75,7 +72,7 @@ emoticond config show                     # every setting and where it came from
 
 ```toml
 [dependencies]
-emoticond = { git = "https://github.com/Cloveian/emoticond" }
+emoticond = "1"
 ```
 
 ```rust
